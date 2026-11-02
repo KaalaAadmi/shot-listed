@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "clip-grader",
+  "type": "object",
+  "properties": {
+    "grades": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "candidate": {
+            "type": "integer",
+            "description": "1-based candidate number"
+          },
+          "grade": {
+            "type": "string",
+            "enum": [
+              "exact",
+              "works",
+              "weak",
+              "no"
+            ]
+          },
+          "why": {
+            "type": "string",
+            "description": "One sentence"
+          },
+          "useFromSeconds": {
+            "type": "number",
+            "description": "Start of the best part; 0 for photos"
+          },
+          "useToSeconds": {
+            "type": "number",
+            "description": "End of the best part; 0 for photos"
+          }
+        },
+        "required": [
+          "candidate",
+          "grade",
+          "why",
+          "useFromSeconds",
+          "useToSeconds"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "best": {
+      "type": "integer",
+      "description": "Candidate to place: must be graded exact or works; 0 if none qualify"
+    }
+  },
+  "required": [
+    "grades",
+    "best"
+  ],
+  "additionalProperties": false
+}

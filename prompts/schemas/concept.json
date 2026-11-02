@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "concept",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Short working title"
+    },
+    "format": {
+      "type": "string",
+      "description": "Short format label, e.g. 'POV skit', 'text over b-roll', 'slideshow', 'setup \u2192 visual punchline'"
+    },
+    "hook": {
+      "type": "string",
+      "description": "What happens or is said in the first 1\u20132 seconds"
+    },
+    "lengthSeconds": {
+      "type": "number",
+      "description": "Total length"
+    },
+    "why": {
+      "type": "string",
+      "description": "One or two sentences: why this works, or should work"
+    },
+    "beats": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "n": {
+            "type": "integer",
+            "description": "1-based order"
+          },
+          "seconds": {
+            "type": "number",
+            "description": "Duration of this beat"
+          },
+          "shows": {
+            "type": "string",
+            "description": "What the shot shows, as a filmable description: subject, action, setting, framing"
+          },
+          "onScreenText": {
+            "type": "string",
+            "description": "Text overlay for this beat, verbatim; empty string if none"
+          },
+          "spoken": {
+            "type": "string",
+            "description": "Speech or voiceover, verbatim; empty string if none"
+          },
+          "sound": {
+            "type": "string",
+            "description": "Notable sound for this beat (music drop, effect); empty string if none"
+          }
+        },
+        "required": [
+          "n",
+          "seconds",
+          "shows",
+          "onScreenText",
+          "spoken",
+          "sound"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "onScreenText": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Every overlay in order, verbatim"
+    },
+    "audio": {
+      "type": "object",
+      "properties": {
+        "idea": {
+          "type": "string",
+          "description": "The sound: track name if known, else a description of the vibe"
+        },
+        "searchTerms": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "3\u20135 terms to find it or something like it in Edits / Instagram"
+        }
+      },
+      "required": [
+        "idea",
+        "searchTerms"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "title",
+    "format",
+    "hook",
+    "lengthSeconds",
+    "why",
+    "beats",
+    "onScreenText",
+    "audio"
+  ],
+  "additionalProperties": false,
+  "description": "Shared plan input. Inspiration analysis and briefs both produce this shape."
+}

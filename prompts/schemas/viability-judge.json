@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "viability-judge",
+  "type": "object",
+  "properties": {
+    "nicheFit": {
+      "type": "object",
+      "properties": {
+        "score": {
+          "type": "integer",
+          "description": "0 to 10"
+        },
+        "why": {
+          "type": "string",
+          "description": "One sentence"
+        }
+      },
+      "required": [
+        "score",
+        "why"
+      ],
+      "additionalProperties": false
+    },
+    "effort": {
+      "type": "object",
+      "properties": {
+        "score": {
+          "type": "integer",
+          "description": "0 to 10, where 10 is easiest"
+        },
+        "why": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "score",
+        "why"
+      ],
+      "additionalProperties": false
+    },
+    "formatFreshness": {
+      "type": "object",
+      "properties": {
+        "score": {
+          "type": "integer",
+          "description": "0 to 10, where 0 means I posted this format very recently"
+        },
+        "why": {
+          "type": "string"
+        },
+        "similarRecentPost": {
+          "type": "string",
+          "description": "Title of the closest recent post; empty if none"
+        }
+      },
+      "required": [
+        "score",
+        "why",
+        "similarRecentPost"
+      ],
+      "additionalProperties": false
+    },
+    "sharePotential": {
+      "type": "object",
+      "properties": {
+        "score": {
+          "type": "integer",
+          "description": "0 to 10"
+        },
+        "why": {
+          "type": "string",
+          "description": "One sentence"
+        }
+      },
+      "required": [
+        "score",
+        "why"
+      ],
+      "additionalProperties": false
+    },
+    "twist": {
+      "type": "string",
+      "description": "How to make it mine rather than a copy; one or two sentences; empty if it already is"
+    },
+    "reason": {
+      "type": "string",
+      "description": "One line for the verdict card"
+    }
+  },
+  "required": [
+    "nicheFit",
+    "effort",
+    "formatFreshness",
+    "sharePotential",
+    "twist",
+    "reason"
+  ],
+  "additionalProperties": false
+}

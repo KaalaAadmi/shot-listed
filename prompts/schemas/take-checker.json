@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "take-checker",
+  "type": "object",
+  "properties": {
+    "verdict": {
+      "type": "string",
+      "enum": [
+        "pass",
+        "usable",
+        "reshoot"
+      ]
+    },
+    "matches": {
+      "type": "object",
+      "properties": {
+        "subjectAction": {
+          "type": "object",
+          "properties": {
+            "ok": {
+              "type": "boolean"
+            },
+            "note": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "ok",
+            "note"
+          ],
+          "additionalProperties": false
+        },
+        "framing": {
+          "type": "object",
+          "properties": {
+            "ok": {
+              "type": "boolean"
+            },
+            "note": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "ok",
+            "note"
+          ],
+          "additionalProperties": false
+        },
+        "textSpace": {
+          "type": "object",
+          "properties": {
+            "ok": {
+              "type": "boolean"
+            },
+            "note": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "ok",
+            "note"
+          ],
+          "additionalProperties": false
+        },
+        "lighting": {
+          "type": "object",
+          "properties": {
+            "ok": {
+              "type": "boolean"
+            },
+            "note": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "ok",
+            "note"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "subjectAction",
+        "framing",
+        "textSpace",
+        "lighting"
+      ],
+      "additionalProperties": false
+    },
+    "fix": {
+      "type": "string",
+      "description": "For usable or reshoot: the specific change for the next take, one or two sentences; empty for pass"
+    },
+    "useFromSeconds": {
+      "type": "number"
+    },
+    "useToSeconds": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "verdict",
+    "matches",
+    "fix",
+    "useFromSeconds",
+    "useToSeconds"
+  ],
+  "additionalProperties": false
+}

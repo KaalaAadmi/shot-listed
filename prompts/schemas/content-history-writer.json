@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "content-history-writer",
+  "type": "object",
+  "properties": {
+    "entry": {
+      "type": "string",
+      "description": "The new entry, in exactly the same layout as the existing entries, without its number"
+    },
+    "tier": {
+      "type": "string",
+      "enum": [
+        "benchmark",
+        "good",
+        "weak",
+        "none"
+      ]
+    },
+    "lesson": {
+      "type": "string",
+      "description": "One sentence: what to repeat or avoid"
+    }
+  },
+  "required": [
+    "entry",
+    "tier",
+    "lesson"
+  ],
+  "additionalProperties": false
+}

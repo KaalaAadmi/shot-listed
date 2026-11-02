@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "plan-chat",
+  "type": "object",
+  "properties": {
+    "reply": {
+      "type": "string",
+      "description": "Short reply to show in the chat"
+    },
+    "operations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "enum": [
+              "reorder",
+              "set_length",
+              "change_text",
+              "use_alternate",
+              "make_film_it",
+              "remove_shot",
+              "add_shot",
+              "find_clip"
+            ]
+          },
+          "shot": {
+            "type": "integer",
+            "description": "Shot number it applies to; 0 if not applicable"
+          },
+          "toPosition": {
+            "type": "integer",
+            "description": "For reorder: the new position; for add_shot: insert after this shot; else 0"
+          },
+          "seconds": {
+            "type": "number",
+            "description": "For set_length (whole reel when shot is 0) and add_shot; else 0"
+          },
+          "text": {
+            "type": "string",
+            "description": "For change_text and add_shot (its on-screen text); else empty"
+          },
+          "alternate": {
+            "type": "integer",
+            "description": "For use_alternate: alternate number; else 0"
+          },
+          "description": {
+            "type": "string",
+            "description": "For find_clip and add_shot: what the shot should show; else empty"
+          }
+        },
+        "required": [
+          "op",
+          "shot",
+          "toPosition",
+          "seconds",
+          "text",
+          "alternate",
+          "description"
+        ],
+        "additionalProperties": false
+      },
+      "description": "Empty when you are only answering or asking a question"
+    },
+    "needsConfirmation": {
+      "type": "boolean",
+      "description": "True if you asked me to confirm instead of changing anything"
+    }
+  },
+  "required": [
+    "reply",
+    "operations",
+    "needsConfirmation"
+  ],
+  "additionalProperties": false
+}

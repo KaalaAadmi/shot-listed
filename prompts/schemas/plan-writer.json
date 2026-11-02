@@ -1,0 +1,163 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "plan-writer",
+  "type": "object",
+  "properties": {
+    "hooks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "On-screen hook text for the first 1\u20132 seconds"
+          },
+          "style": {
+            "type": "string",
+            "description": "2\u20133 word label"
+          }
+        },
+        "required": [
+          "text",
+          "style"
+        ],
+        "additionalProperties": false
+      },
+      "description": "Exactly 3, different angles"
+    },
+    "shots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "n": {
+            "type": "integer"
+          },
+          "onScreenText": {
+            "type": "string",
+            "description": "Final overlay text; empty if none"
+          },
+          "textPosition": {
+            "type": "string",
+            "enum": [
+              "top",
+              "middle",
+              "bottom",
+              "none"
+            ]
+          },
+          "filmIt": {
+            "type": "object",
+            "properties": {
+              "needed": {
+                "type": "boolean",
+                "description": "True only for shots marked film_it in the input"
+              },
+              "shot": {
+                "type": "string",
+                "description": "What to film, one sentence"
+              },
+              "where": {
+                "type": "string",
+                "description": "A real kind of place you can get to"
+              },
+              "framing": {
+                "type": "string"
+              },
+              "lens": {
+                "type": "string",
+                "enum": [
+                  "0.5x",
+                  "1x",
+                  "2x",
+                  "front",
+                  "n/a"
+                ]
+              },
+              "movement": {
+                "type": "string"
+              },
+              "textSpace": {
+                "type": "string",
+                "description": "Where to leave room for the overlay"
+              },
+              "lightSound": {
+                "type": "string"
+              },
+              "recordSeconds": {
+                "type": "number",
+                "description": "How long to record, longer than the beat"
+              },
+              "takes": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "needed",
+              "shot",
+              "where",
+              "framing",
+              "lens",
+              "movement",
+              "textSpace",
+              "lightSound",
+              "recordSeconds",
+              "takes"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "n",
+          "onScreenText",
+          "textPosition",
+          "filmIt"
+        ],
+        "additionalProperties": false
+      },
+      "description": "One per beat, same order and numbers as the input"
+    },
+    "audio": {
+      "type": "object",
+      "properties": {
+        "vibe": {
+          "type": "string"
+        },
+        "searchTerms": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "useInspirationSound": {
+          "type": "boolean",
+          "description": "True if the inspiration's own sound is the best choice"
+        },
+        "note": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "vibe",
+        "searchTerms",
+        "useInspirationSound",
+        "note"
+      ],
+      "additionalProperties": false
+    },
+    "editNotes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "2\u20134 short pacing or cutting tips for Edits"
+    }
+  },
+  "required": [
+    "hooks",
+    "shots",
+    "audio",
+    "editNotes"
+  ],
+  "additionalProperties": false
+}

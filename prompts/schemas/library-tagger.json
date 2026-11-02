@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "library-tagger",
+  "type": "object",
+  "properties": {
+    "caption": {
+      "type": "string",
+      "description": "One concrete, searchable sentence of what is visible and happening"
+    },
+    "setting": {
+      "type": "string",
+      "enum": [
+        "home",
+        "gym",
+        "street",
+        "office",
+        "cafe_restaurant",
+        "shop",
+        "nature",
+        "transport",
+        "event",
+        "screen",
+        "other"
+      ]
+    },
+    "shotType": {
+      "type": "string",
+      "enum": [
+        "selfie",
+        "mirror_selfie",
+        "pov",
+        "wide",
+        "medium",
+        "close_up",
+        "over_shoulder",
+        "screen_recording",
+        "text_slide",
+        "b_roll",
+        "other"
+      ]
+    },
+    "action": {
+      "type": "string",
+      "description": "What the subject is doing, in a few words; empty if static"
+    },
+    "mood": {
+      "type": "string",
+      "description": "One or two words"
+    },
+    "peopleCount": {
+      "type": "integer"
+    },
+    "faceVisible": {
+      "type": "boolean",
+      "description": "A face is clearly visible"
+    },
+    "visibleText": {
+      "type": "string",
+      "description": "Any readable text in the frame, verbatim; empty if none"
+    },
+    "objects": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Up to 8 notable objects"
+    },
+    "useFor": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Up to 4 roles this could play in a reel, e.g. 'reaction shot', 'establishing shot', 'punchline', 'transition'"
+    },
+    "quality": {
+      "type": "object",
+      "properties": {
+        "sharp": {
+          "type": "boolean"
+        },
+        "wellLit": {
+          "type": "boolean"
+        },
+        "stable": {
+          "type": "boolean"
+        },
+        "note": {
+          "type": "string",
+          "description": "Empty if fine"
+        }
+      },
+      "required": [
+        "sharp",
+        "wellLit",
+        "stable",
+        "note"
+      ],
+      "additionalProperties": false
+    },
+    "unusable": {
+      "type": "boolean",
+      "description": "Screenshots, documents, receipts, accidental shots, or too poor to use"
+    },
+    "unusableReason": {
+      "type": "string",
+      "description": "Empty unless unusable"
+    }
+  },
+  "required": [
+    "caption",
+    "setting",
+    "shotType",
+    "action",
+    "mood",
+    "peopleCount",
+    "faceVisible",
+    "visibleText",
+    "objects",
+    "useFor",
+    "quality",
+    "unusable",
+    "unusableReason"
+  ],
+  "additionalProperties": false
+}

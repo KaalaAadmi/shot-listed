@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "idea-coach",
+  "type": "object",
+  "properties": {
+    "reply": {
+      "type": "string",
+      "description": "What to show in the chat; short enough to read on a phone"
+    },
+    "readiness": {
+      "type": "string",
+      "enum": [
+        "exploring",
+        "almost",
+        "ready"
+      ]
+    },
+    "workingTitle": {
+      "type": "string",
+      "description": "A few words; empty until there is one"
+    }
+  },
+  "required": [
+    "reply",
+    "readiness",
+    "workingTitle"
+  ],
+  "additionalProperties": false
+}

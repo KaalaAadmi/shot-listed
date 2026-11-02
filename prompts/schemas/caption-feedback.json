@@ -1,0 +1,194 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "caption-feedback",
+  "type": "object",
+  "properties": {
+    "verdict": {
+      "type": "string",
+      "enum": [
+        "strong",
+        "good",
+        "needs_work"
+      ]
+    },
+    "score": {
+      "type": "integer",
+      "description": "1 to 10"
+    },
+    "summary": {
+      "type": "string",
+      "description": "Two sentences at most: the honest overall read"
+    },
+    "checks": {
+      "type": "object",
+      "properties": {
+        "hook": {
+          "type": "object",
+          "properties": {
+            "ok": {
+              "type": "boolean"
+            },
+            "note": {
+              "type": "string",
+              "description": "One short sentence"
+            }
+          },
+          "required": [
+            "ok",
+            "note"
+          ],
+          "additionalProperties": false
+        },
+        "structure": {
+          "type": "object",
+          "properties": {
+            "ok": {
+              "type": "boolean"
+            },
+            "note": {
+              "type": "string",
+              "description": "One short sentence"
+            }
+          },
+          "required": [
+            "ok",
+            "note"
+          ],
+          "additionalProperties": false
+        },
+        "lineLength": {
+          "type": "object",
+          "properties": {
+            "ok": {
+              "type": "boolean"
+            },
+            "note": {
+              "type": "string",
+              "description": "One short sentence"
+            }
+          },
+          "required": [
+            "ok",
+            "note"
+          ],
+          "additionalProperties": false
+        },
+        "keywords": {
+          "type": "object",
+          "properties": {
+            "ok": {
+              "type": "boolean"
+            },
+            "note": {
+              "type": "string",
+              "description": "One short sentence"
+            }
+          },
+          "required": [
+            "ok",
+            "note"
+          ],
+          "additionalProperties": false
+        },
+        "hashtags": {
+          "type": "object",
+          "properties": {
+            "ok": {
+              "type": "boolean"
+            },
+            "note": {
+              "type": "string",
+              "description": "One short sentence"
+            }
+          },
+          "required": [
+            "ok",
+            "note"
+          ],
+          "additionalProperties": false
+        },
+        "limits": {
+          "type": "object",
+          "properties": {
+            "ok": {
+              "type": "boolean"
+            },
+            "note": {
+              "type": "string",
+              "description": "One short sentence"
+            }
+          },
+          "required": [
+            "ok",
+            "note"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "hook",
+        "structure",
+        "lineLength",
+        "keywords",
+        "hashtags",
+        "limits"
+      ],
+      "additionalProperties": false
+    },
+    "suggestions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "s1, s2, \u2026"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "replace_line",
+              "add_line",
+              "remove_line",
+              "replace_hashtags"
+            ]
+          },
+          "line": {
+            "type": "integer",
+            "description": "1-based line of the draft it applies to; for add_line, the new line goes after this one (0 = at the top); 0 for replace_hashtags"
+          },
+          "text": {
+            "type": "string",
+            "description": "The new line, or the new hashtags separated by spaces without #; empty for remove_line"
+          },
+          "why": {
+            "type": "string",
+            "description": "One sentence"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "line",
+          "text",
+          "why"
+        ],
+        "additionalProperties": false
+      },
+      "description": "At most 4, most useful first"
+    },
+    "answer": {
+      "type": "string",
+      "description": "Direct answer to my question; empty string if I didn't ask one"
+    }
+  },
+  "required": [
+    "verdict",
+    "score",
+    "summary",
+    "checks",
+    "suggestions",
+    "answer"
+  ],
+  "additionalProperties": false
+}
