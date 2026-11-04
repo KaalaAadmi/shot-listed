@@ -1,15 +1,15 @@
 # Prompts
 
-Every model call in Reel Studio, in one place. Both the web app (`web/`) and the pipeline host (`pipeline/`) load these files, so a prompt is written once.
+Every model call in ShotListed, in one place. Both the web app (`web/`) and the pipeline host (`pipeline/`) load these files, so a prompt is written once.
 
 ## Index
 
 | File | What it does | Phase | Model | Voice blocks | Status |
 | --- | --- | --- | --- | --- | --- |
-| (in code) `web/src/lib/captions/engine.ts` → `DESCRIBE_SYSTEM` | Watches your final cut; describes hook, beats, on-screen text and speech verbatim | 3 | video | none | Done |
-| (in code) `engine.ts` → your v3.0 prompt + `ENGINE_CONTRACT` | Writes the three caption options, keywords, feedback, Trial | 3 | caption | `voicePrompt`, `contentHistory` | Done |
+| `describe-reel.md` | Watches your final cut; describes hook, beats, on-screen text and speech verbatim | 3 | video | none | Done |
+| `write-captions.md` | Writes the three caption options, keywords, feedback, Trial | 3 | caption | `voicePrompt`, `contentHistory` | Done |
 | `creator-profile.default.md` | Default text for Settings → **Creator profile** (not a prompt on its own) | 3b | n/a | n/a | Written |
-| `caption-feedback.md` | Reviews your own draft caption; scores, checks, suggests edits, answers your question | 3b | caption | `voicePrompt`, `contentHistory` | Written |
+| `caption-feedback.md` | Reviews your own draft caption; scores, checks, suggests edits, answers your question | 3b | caption | `voicePrompt`, `contentHistory` | Done |
 | `library-tagger.md` | Describes each photo or clip so plans can search the library | 6 | vision | none | Written |
 | `inspiration-analysis.md` | Watches a saved reel; turns it into a concept you could reproduce | 7 | video | none | Written |
 | `viability-judge.md` | Scores niche fit, effort, freshness, share potential; suggests a twist | 7, 8b | caption | `creatorProfile`, `contentHistory`, `recentFormats` | Written |
@@ -22,7 +22,7 @@ Every model call in Reel Studio, in one place. Both the web app (`web/`) and the
 | `chat-summariser.md` | Folds old turns of a long chat into a short note | 8 | cheap | none | Written |
 | `content-history-writer.md` | Writes a posted reel's content history entry from its numbers | 10 (optional) | caption | `contentHistory` | Written |
 
-The two prompts marked "in code" work today; move them into files here when phase 3b touches the engine, so all prompts follow one convention.
+All prompts follow one convention. `npm run prompts` (run automatically before dev, build, test and typecheck) bundles these files and their schemas into `web/src/lib/prompts.generated.json`, which `web/src/lib/prompts.ts` fills and returns. Commit the generated file: Vercel may build with only `web/` present, and then keeps it as is.
 
 ## Models
 

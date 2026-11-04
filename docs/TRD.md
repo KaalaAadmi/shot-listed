@@ -1,4 +1,4 @@
-# Reel Studio — Technical Requirements
+# ShotListed — Technical Requirements
 
 Status legend: **Done** (built, typechecked, tested; not yet deployed), **Partly done**, **Planned**.
 
@@ -9,7 +9,7 @@ Status legend: **Done** (built, typechecked, tested; not yet deployed), **Partly
 ```mermaid
 flowchart LR
   phone["iPhone<br/>web app · share Shortcut"]
-  web["Reel Studio web<br/>Next.js on Vercel"]
+  web["ShotListed web<br/>Next.js on Vercel"]
   atlas[("MongoDB Atlas<br/>library_items, finals,<br/>inspirations, plans, jobs, runs")]
   storage["r2-storage<br/>Vercel + own MongoDB"]
   r2[("Cloudflare R2<br/>media files")]
@@ -35,7 +35,7 @@ flowchart LR
 | --- | --- | --- |
 | **Web app** (`web/`) | UI, API, auth, captions engine, job queue | Done for Library, Captions, Settings |
 | **Storage service** (separate repo `r2-storage`) | Uploads, duplicates, resuming, asset registry, signed links, derived files, merge, usage | Done (separate repo, see `SPLIT_GUIDE.md`); not deployed |
-| **Pipeline host** (`pipeline/`, Oracle VM) | Long media jobs: downloads, ffmpeg, AI calls on video, library tagging | Planned |
+| **Pipeline host** (`pipeline/`, Oracle VM) | Long media jobs: downloads, ffmpeg, AI calls on video, library tagging | Done in code (VM not set up) |
 | **Mac mini agent** (`pipeline/`, `macsync` command) | Reads iCloud Photos with osxphotos, uploads new items | Server side Done; agent Planned |
 
 ## 2. Technology choices
@@ -62,13 +62,13 @@ flowchart LR
   - `owner`: your Clerk session; the user ID must equal `OWNER_USER_ID`.
   - `shortcut`: header `X-Reel-Token: <SHORTCUT_TOKEN>`.
   - `agent`: header `X-Reel-Token: <AGENT_TOKEN>`.
-  - `host` (Planned): header `X-Reel-Token: <HOST_TOKEN>`.
+  - `host`: header `X-Reel-Token: <HOST_TOKEN>`.
 - Tokens use `X-Reel-Token`, not `Authorization`, because Clerk reads `Authorization` as its own session token. Comparison is constant-time.
 - Unexpected errors return a generic message; details go to Vercel logs.
 
 ### 3.2 Uploads — Done (through the storage service)
 
-Reel Studio's upload routes are thin proxies to `r2-storage`. They keep their URLs and request shapes, so the browser, the Shortcut and the Mac agent only ever call Reel Studio. Each route checks the caller (Clerk session or `X-Reel-Token`), adds what Reel Studio decides, and forwards through the connector (§5):
+ShotListed's upload routes are thin proxies to `r2-storage`. They keep their URLs and request shapes, so the browser, the Shortcut and the Mac agent only ever call ShotListed. Each route checks the caller (Clerk session or `X-Reel-Token`), adds what ShotListed decides, and forwards through the connector (§5):
 
 - `purpose` becomes a storage collection: `library` → `library`, `final-cut` → `finals`;
 - final cuts get `kinds: ["video"]` and `maxBytes` 500 MB;
@@ -86,7 +86,7 @@ Browser side (`src/lib/upload-client.ts`):
 
 What storage does with it (rules in the storage repo's `docs/TRD.md` §6): checks the type and size; finds duplicates by Photos UUID, then by hash within the collection; attaches the Mac's Photos UUID to an item the phone uploaded first (`adopted: true`); resumes unfinished uploads on the same item; checks the stored size with R2 on completion; removes uploads untouched for 24 hours.
 
-Different files of the same shot (a JPEG from Safari and the HEIC from the Mac) are Reel Studio's job: §4.1.
+Different files of the same shot (a JPEG from Safari and the HEIC from the Mac) are ShotListed's job: §4.1.
 
 ### 3.3 Captions engine — Done
 
@@ -107,7 +107,7 @@ Runs:
 - The page polls every 2 seconds while a step runs.
 - A double tap can't start two runs: the first step is marked running before the background work starts.
 
-### 3.3a Description check, caption drafts and feedback — Planned (phase 3b)
+### 3.3a Description check, caption drafts and feedback — Done (phase 3b)
 
 Builds on the engine above; needs nothing from the pipeline host, so it can ship before it.
 
@@ -150,7 +150,7 @@ Builds on the engine above; needs nothing from the pipeline host, so it can ship
 
 Clipboard uses the Clipboard API with a textarea fallback for older iOS.
 
-### 3.5 Jobs API for the pipeline host — Planned
+### 3.5 Jobs API for the pipeline host — Done
 
 - The host never connects to Atlas directly; it uses the web app's API with `HOST_TOKEN`:
   - `POST /api/host/jobs/claim` → the next job, leased for 10 minutes;
@@ -163,9 +163,9 @@ Clipboard uses the Clipboard API with a textarea fallback for older iOS.
 ### 3.6 Live pipeline view — Partly done
 
 - Done: the Captions step strip.
-- Planned: a React Flow (`@xyflow/react`) diagram per run, from `runs`. It polls every 2 seconds while anything is active, and each node opens that step's output.
+- A React Flow (`@xyflow/react`) diagram per run, from `runs`. It polls every 2 seconds while anything is active, and each node opens that step's output.
 
-### 3.7 Ideas and plan chat — Planned (phases 8 and 8b)
+### 3.7 Ideas and plan chat — Done (phases 8 and 8b). Plans are built in the web app's background (`after()`), not as a host job
 
 **One plan input for both routes.** Inspiration analysis and your own ideas both produce a **concept** with the same schema (`conceptSchema`):
 
@@ -227,7 +227,7 @@ That way the caption rules (five lines, hashtags, the Section 8 layout) don't le
 
 Every stored model result records `promptId` and `promptVersion`, so you can compare before and after a prompt change.
 
-## 4. Pipeline host — Planned
+## 4. Pipeline host — Done in code. Jobs: `index-asset`, `ingest-inspiration`, `analyse-inspiration`, `check-take`, `clip-pack`
 
 Oracle Cloud Always Free Arm VM (2 OCPU, 12 GB RAM, 200 GB disk) running `pipeline/` as a systemd service. It polls for jobs every 5 seconds.
 
@@ -248,7 +248,7 @@ Notes:
 - Embedding search: brute-force cosine similarity over `library_items` (a few thousand items) in the host. No vector database.
 - Instagram blocks data-centre IPs more often. If yt-dlp from the VM gets challenged, run `ingest-inspiration` from a home machine, or upload the reel file by hand (same flow as a final cut).
 
-### 4.1 Recognising the same shot — Planned (phase 6; Mac side phase 12)
+### 4.1 Recognising the same shot — Done (phase 6; Mac side phase 12)
 
 Identical files never get stored twice (storage checks content hashes). This covers the rest: one shot saved as two different files, such as the HEIC the Mac exports and the JPEG Safari handed over, or a compressed and an uncompressed copy of a video.
 
@@ -272,11 +272,11 @@ Merging:
 
 - The older item's ID is kept, so its tags, exclusions and plans stay attached. Anything that pointed at the newer item (plan shots, takes) is moved to the older one.
 - The better file wins: more pixels; then, for video, higher bitrate; then the original format (HEIC or HEVC over a converted JPEG or H.264); a tie keeps the older file.
-- Reel Studio calls storage `POST /v1/assets/<older>/merge` with `keepOriginal: "from"` when the newer file is better. If the original changed, the item is re-indexed for new thumbnails and proxy.
+- ShotListed calls storage `POST /v1/assets/<older>/merge` with `keepOriginal: "from"` when the newer file is better. If the original changed, the item is re-indexed for new thumbnails and proxy.
 
 Final cuts: Edits saves its exports to your camera roll, so once the Mac syncs, final cuts would reach the library too. A library video that matches a final cut (same hash, or same duration and frame hashes) is marked **Possible: final cut** and excluded from plans until you decide.
 
-Mac mini (phase 12): before uploading, the agent calls `POST /api/agent/match` with the Photos UUID, content hash, capture time, size, duration and its own perceptual hashes. Reel Studio replies:
+Mac mini (phase 12): before uploading, the agent calls `POST /api/agent/match` with the Photos UUID, content hash, capture time, size, duration and its own perceptual hashes. ShotListed replies:
 
 - `skip` (`already-synced`, `same-bytes`, `final-cut`): for `same-bytes`, the existing item takes the Photos UUID;
 - `skip` (`same-shot`): a **Same** match whose file is at least as good; the existing item takes the Photos UUID;
@@ -289,15 +289,15 @@ Mac mini (phase 12): before uploading, the agent calls `POST /api/agent/match` w
 - `web/src/lib/http.ts`: a storage 4xx passes its message and status through (e.g. "Upload already finished"); a 5xx becomes a 502 with a generic message, details in the logs.
 - `web/src/lib/storage/types.ts` follows the storage repo's `openapi.yaml`; update both together.
 
-Reel Studio never reads the storage database directly, only this API; otherwise the two repos would be one system again.
+ShotListed never reads the storage database directly, only this API; otherwise the two repos would be one system again.
 
 ## 6. Limits that shape the design
 
 | Limit | Value | Design response |
 | --- | --- | --- |
 | Vercel Hobby function duration | 300 s | Captions fit; anything longer runs on the host. |
-| Vercel Hobby use | Personal, non-commercial | Upgrade to Pro if Reel Studio is ever sold. |
-| Atlas M0 | 512 MB, ~100 ops/s, 500 connections; one free cluster per project; paused after 30 days idle | Reel Studio and r2-storage use separate Atlas projects, so each has its own 512 MB. Text and embeddings only (≈15 KB per item); pool size 5. |
+| Vercel Hobby use | Personal, non-commercial | Upgrade to Pro if ShotListed is ever sold. |
+| Atlas M0 | 512 MB, ~100 ops/s, 500 connections; one free cluster per project; paused after 30 days idle | ShotListed and r2-storage use separate Atlas projects, so each has its own 512 MB. Text and embeddings only (≈15 KB per item); pool size 5. |
 | R2 free tier | 10 GB, 1M writes, 10M reads/month, free egress | Store 1080p proxies; originals can be dropped after proxying. |
 | Gemini Files API | 2 GB per file, kept 48 h; URL input only up to 15 MB | Upload through the Files API; delete after describing. |
 | Instagram | 5 hashtags, 2,200 characters | Enforced in code. |
@@ -311,14 +311,14 @@ Reel Studio never reads the storage database directly, only this API; otherwise 
 | --- | --- |
 | `MONGODB_URI`, `MONGODB_DB` | Atlas |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `NEXT_PUBLIC_CLERK_SIGN_IN_URL`, `OWNER_USER_ID` | Auth |
-| `SHORTCUT_TOKEN`, `AGENT_TOKEN`, `HOST_TOKEN` (Planned) | Non-browser callers |
+| `SHORTCUT_TOKEN`, `AGENT_TOKEN`, `HOST_TOKEN` | Non-browser callers |
 | `STORAGE_API_URL`, `STORAGE_API_KEY` | Connector (replaces `R2_*`) |
 | `GEMINI_API_KEY`, `GEMINI_MODEL` | Video understanding |
-| `VISION_MODEL` (Planned, phase 6) | Cheap vision model for tagging, grading and take checks; default Gemini Flash-Lite |
+| `VISION_MODEL` | Cheap vision model for tagging, grading and take checks; default Gemini Flash-Lite |
 | `ANTHROPIC_API_KEY`, `CLAUDE_MODEL` | Caption writing (optional) |
-| `PEXELS_API_KEY` (Planned) | Stock footage |
+| `PEXELS_API_KEY` | Stock footage |
 
-The pipeline host reads `REEL_STUDIO_URL`, `HOST_TOKEN`, `STORAGE_API_URL`, `STORAGE_API_KEY`, `GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, `PEXELS_API_KEY`, and the path to the burner's cookie file.
+Also `NTFY_TOPIC` (phone notifications). The pipeline host reads `REEL_STUDIO_URL`, `HOST_TOKEN`, `STORAGE_API_URL`, `STORAGE_API_KEY`, `GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, `PEXELS_API_KEY`, and the path to the burner's cookie file.
 
 ## 8. Testing
 
@@ -328,12 +328,12 @@ The pipeline host reads `REEL_STUDIO_URL`, `HOST_TOKEN`, `STORAGE_API_URL`, `STO
 | Content hash and resume planning (`tests/uploads.test.mts`: SHA-256 test vector, chunked = whole-file hash, cancelling, wrong-size parts re-sent) | `node --test` | Done |
 | Storage client (`tests/storage-client.test.mts`: key header, 4xx not retried, retries, 204s, query strings) | `node --test`, `fetch` stubbed | Done |
 | Duplicate rules, resuming, the store, S3 round trips | In the r2-storage repo (`npm test`, with moto) | Done there |
-| Feedback reply schema accepted by Claude and Gemini; code checks override model claims; suggestions apply to the draft | `node --test` with stubbed models | Planned (phase 3b) |
-| Concept schema shared by analysis and briefs; plan-chat operations apply and undo | `node --test` | Planned (phases 8, 8b) |
-| Same-shot rules (bursts stay apart, HEIC/JPEG pair is **Same**, recompressed video is **Same**, better file wins, final-cut flag) | `pytest` with fixtures in `pipeline/tests/fixtures/duplicates` | Planned (phase 6) |
+| Feedback reply schema accepted by Claude and Gemini; code checks override model claims; suggestions apply to the draft | `node --test` with stubbed models | Done |
+| Concept schema shared by analysis and briefs; plan-chat operations apply and undo | `node --test` | Done |
+| Same-shot rules (bursts stay apart, HEIC/JPEG pair is **Same**, recompressed video is **Same**, better file wins, final-cut flag) | `pytest` with fixtures in `pipeline/tests/fixtures/duplicates` | Done |
 | Model calls | Stubbed models in tests; first live run on deploy | Done (stubbed) |
 | Connector against a running storage service | `npm run check:storage` | Done against a local storage server; deployed run Planned |
-| Pipeline host | `pytest`, with sample media in `pipeline/tests/fixtures` | Planned |
+| Pipeline host | `pytest`, with sample media in `pipeline/tests/fixtures` | Done |
 | End-to-end | Checklist in `SPLIT_GUIDE.md` §3 | Planned |
 
 Every change must pass `npm run typecheck && npm run lint && npm test && npm run build`.
@@ -341,7 +341,7 @@ Every change must pass `npm run typecheck && npm run lint && npm test && npm run
 ## 9. Security
 
 - Private bucket; every view is a signed link (1 hour), every upload a signed PUT (15 minutes) for one exact Content-Type.
-- No R2 credentials in Reel Studio after the split; only a revocable storage API key.
+- No R2 credentials in ShotListed after the split; only a revocable storage API key.
 - Tokens are long random strings (`openssl rand -hex 32`), compared in constant time.
 - The burner account's cookies live only on the machine that downloads reels.
 - AI providers receive the video and text you send; use paid tiers to keep it out of training.

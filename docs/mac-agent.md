@@ -13,7 +13,7 @@ Two rules make sure switching never stores a photo twice:
 
 - Identical files are caught by their content hash (SHA-256), whichever device sent them.
 - The same shot as a different file (iOS often uploads a converted copy; the Mac
-  exports the original) is caught by asking Reel Studio before uploading (step 2 below).
+  exports the original) is caught by asking ShotListed before uploading (step 2 below).
 
 Content hashes and resuming are live now. The match call (step 2) arrives with the Mac
 work (implementation plan phase 12); until then, skip it and go straight to step 3.
@@ -45,7 +45,7 @@ is **Sync from the Mac mini**, which is how you choose between the two.
 1. Export the item with osxphotos. For video, transcode to 1080p H.264 SDR first
    (iPhone clips are HDR; Instagram and most editors want SDR) to save R2 space.
    Compute the SHA-256 of the file you will upload (`hashlib`, read in chunks).
-2. *(phase 12)* Ask whether Reel Studio already has it. Send the capture time
+2. *(phase 12)* Ask whether ShotListed already has it. Send the capture time
    with sub-seconds, size after rotation, duration, and perceptual hashes (Python
    `imagehash`: one for a photo, frames at 10%, 50% and 90% for a video):
 
@@ -58,9 +58,9 @@ is **Sync from the Mac mini**, which is how you choose between the two.
    → { "action": "upload" }
    ```
 
-   On `skip`, move on; for `same-bytes` and `same-shot`, Reel Studio has already
+   On `skip`, move on; for `same-bytes` and `same-shot`, ShotListed has already
    attached the Photos UUID to its item. `upload` means no match, a better file than
-   the one Reel Studio has (it will merge them while indexing), or only a possible match.
+   the one ShotListed has (it will merge them while indexing), or only a possible match.
 3. Start the upload, passing the Photos UUID so re-runs never duplicate, and the hash
    (required):
 

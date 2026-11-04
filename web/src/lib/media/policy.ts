@@ -1,4 +1,4 @@
-// The few upload rules Reel Studio still needs on its side: what the file picker offers,
+// The few upload rules ShotListed still needs on its side: what the file picker offers,
 // how hashes look, and how parts are sized (to check what a resumed upload already sent).
 // The authoritative rules (types, sizes, part plans) live in the r2-storage service.
 

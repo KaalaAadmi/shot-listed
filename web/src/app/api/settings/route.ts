@@ -14,6 +14,9 @@ function view(s: SettingsDoc) {
     contentHistoryIsDefault: voice.contentHistoryIsDefault,
     hashtagPlacement: s.hashtagPlacement ?? "caption",
     blankLineBeforeHashtags: s.blankLineBeforeHashtags ?? false,
+    checkDescriptionFirst: s.checkDescriptionFirst ?? true,
+    creatorProfile: voice.creatorProfile,
+    creatorProfileIsDefault: voice.creatorProfileIsDefault,
     updatedAt: s.updatedAt,
   };
 }
@@ -34,6 +37,8 @@ const body = z
     captionContentHistory: z.string().max(40_000).nullable(),
     hashtagPlacement: z.enum(["caption", "first-comment"]),
     blankLineBeforeHashtags: z.boolean(),
+    checkDescriptionFirst: z.boolean(),
+    creatorProfile: z.string().max(40_000).nullable(),
   })
   .partial();
 

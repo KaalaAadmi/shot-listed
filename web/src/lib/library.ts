@@ -1,16 +1,17 @@
 import "server-only";
 import { HttpError } from "./auth";
 import { collections } from "./db";
+import { registerAsset, removeItem } from "./library-items";
 import { isContentHash } from "./media/policy.ts";
-import { COLLECTION, storage } from "./storage/connector.ts";
+import { COLLECTION, INSPIRATIONS, storage } from "./storage/connector.ts";
 import type { StorageAsset, UploadResult } from "./storage/types.ts";
-import { DEFAULT_CONTENT_HISTORY, DEFAULT_SYSTEM_PROMPT } from "./captions/default-voice.ts";
+import { DEFAULT_CONTENT_HISTORY, DEFAULT_CREATOR_PROFILE, DEFAULT_SYSTEM_PROMPT } from "./captions/default-voice.ts";
 import type { HashtagPlacement } from "./captions/instagram-format.ts";
 import type { AgentStatus, AssetOrigin, AssetPurpose, AssetView, IngestMode, SettingsDoc } from "./types";
 
 // Files and their records live in the r2-storage service; these functions check what Reel
 // Studio cares about (who is uploading, which purpose) and pass the rest through. The
-// browser, the iOS Shortcut and the Mac agent keep calling Reel Studio's own routes.
+// browser, the iOS Shortcut and the Mac agent keep calling ShotListed's own routes.
 
 /** Gemini gets the whole file in one request; a 1080p reel export is far below this. */
 const MAX_FINAL_CUT_BYTES = 500 * 1024 ** 2;
@@ -27,7 +28,8 @@ export type CreateUploadInput = {
   takenAt?: string;
   externalId?: string;
   origin: AssetOrigin;
-  purpose?: AssetPurpose;
+  /** "inspiration" is a reel uploaded by hand because Instagram wouldn't let the host download it. */
+  purpose?: AssetPurpose | "inspiration";
 };
 
 /** Start an upload, resume one, or report a duplicate (rules live in r2-storage). */
@@ -39,7 +41,7 @@ export async function createUpload(input: CreateUploadInput): Promise<UploadResu
   const purpose = input.purpose ?? "library";
   const takenAt = input.takenAt ?? (input.lastModified ? new Date(input.lastModified).toISOString() : undefined);
   return storage().createUpload({
-    collection: COLLECTION[purpose],
+    collection: purpose === "inspiration" ? INSPIRATIONS : COLLECTION[purpose],
     filename: input.filename,
     contentType: input.contentType,
     size: input.size,
@@ -47,7 +49,7 @@ export async function createUpload(input: CreateUploadInput): Promise<UploadResu
     externalId: input.externalId,
     takenAt,
     metadata: { origin: input.origin },
-    ...(purpose === "final-cut" ? { kinds: ["video"], maxBytes: MAX_FINAL_CUT_BYTES } : {}),
+    ...(purpose !== "library" ? { kinds: ["video"], maxBytes: MAX_FINAL_CUT_BYTES } : {}),
   });
 }
 
@@ -65,6 +67,7 @@ export async function completeUpload(
   parts: { partNumber: number; etag: string }[] | undefined,
 ): Promise<AssetView> {
   const { asset } = await storage().completeUpload(assetId, parts);
+  await registerAsset(asset); // creates the library record and queues indexing
   return toView(asset, null);
 }
 
@@ -86,19 +89,11 @@ function toView(a: StorageAsset, url: string | null | undefined): AssetView {
     takenAt: a.takenAt,
     createdAt: a.createdAt,
     url: url ?? null,
+    thumb: false,
+    tags: null,
+    excluded: false,
+    indexStatus: "pending",
   };
-}
-
-/** Library items, newest first. Thumbnails once the pipeline host makes them; originals until then. */
-export async function listAssets(opts: { kind?: "photo" | "video"; before?: string; limit: number }) {
-  const page = await storage().listAssets({
-    collection: COLLECTION.library,
-    kind: opts.kind,
-    before: opts.before,
-    limit: opts.limit,
-    urls: "thumb",
-  });
-  return { items: page.items.map((a) => toView(a, a.url)), nextBefore: page.next };
 }
 
 export async function getAsset(assetId: string): Promise<AssetView> {
@@ -116,6 +111,7 @@ export async function deleteAsset(assetId: string): Promise<void> {
   const { asset } = await storage().getAsset(assetId);
   if (asset.collection !== COLLECTION.library) throw new HttpError(404, "Not found");
   await storage().deleteAsset(assetId);
+  await removeItem(assetId);
 }
 
 export async function usage() {
@@ -130,6 +126,7 @@ const DEFAULT_SETTINGS: Omit<SettingsDoc, "updatedAt"> = {
   ingestMode: "phone-upload",
   hashtagPlacement: "caption",
   blankLineBeforeHashtags: false,
+  checkDescriptionFirst: true,
 };
 
 export async function getSettings(): Promise<SettingsDoc> {
@@ -145,6 +142,8 @@ export function captionVoice(s: SettingsDoc) {
     contentHistory: s.captionContentHistory?.trim() ? s.captionContentHistory : DEFAULT_CONTENT_HISTORY,
     systemPromptIsDefault: !s.captionSystemPrompt?.trim(),
     contentHistoryIsDefault: !s.captionContentHistory?.trim(),
+    creatorProfile: s.creatorProfile?.trim() ? s.creatorProfile : DEFAULT_CREATOR_PROFILE,
+    creatorProfileIsDefault: !s.creatorProfile?.trim(),
   };
 }
 
@@ -155,6 +154,8 @@ export type SettingsPatch = {
   captionContentHistory?: string | null;
   hashtagPlacement?: HashtagPlacement;
   blankLineBeforeHashtags?: boolean;
+  checkDescriptionFirst?: boolean;
+  creatorProfile?: string | null;
 };
 
 export async function updateSettings(patch: SettingsPatch): Promise<SettingsDoc> {

@@ -10,6 +10,9 @@ type CaptionSettingsState = {
   contentHistoryIsDefault: boolean;
   hashtagPlacement: HashtagPlacement;
   blankLineBeforeHashtags: boolean;
+  checkDescriptionFirst: boolean;
+  creatorProfile: string;
+  creatorProfileIsDefault: boolean;
 };
 
 type Patch = Partial<{
@@ -17,6 +20,8 @@ type Patch = Partial<{
   captionContentHistory: string | null;
   hashtagPlacement: HashtagPlacement;
   blankLineBeforeHashtags: boolean;
+  checkDescriptionFirst: boolean;
+  creatorProfile: string | null;
 }>;
 
 function VoiceField({
@@ -143,6 +148,27 @@ export function CaptionSettings() {
         rows={10}
         onSave={(v) => save({ captionContentHistory: v }, "Content history")}
       />
+
+      <VoiceField
+        key={`profile-${state.creatorProfile.length}-${state.creatorProfileIsDefault}`}
+        title="Creator profile"
+        help="Who you are and what works for your account. Used by ideas and plans, not by captions. Keep 'What works' current."
+        saved={state.creatorProfile}
+        isDefault={state.creatorProfileIsDefault}
+        rows={12}
+        onSave={(v) => save({ creatorProfile: v }, "Creator profile")}
+      />
+
+      <label className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={state.checkDescriptionFirst}
+          onChange={(e) => void save({ checkDescriptionFirst: e.target.checked }, "Description check")}
+          className="accent-[var(--accent)]"
+        />
+        Check the description first
+        <span className="text-xs text-muted">Pause after the video is described so you can fix it before captions are written.</span>
+      </label>
 
       <fieldset className="flex flex-col gap-2 text-sm">
         <legend className="mb-1 font-medium">Where hashtags go</legend>

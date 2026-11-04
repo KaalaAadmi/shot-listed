@@ -1,22 +1,30 @@
+import { z } from "zod";
 import { authorize } from "@/lib/auth";
 import { handle } from "@/lib/http";
-import { listAssets, usage } from "@/lib/library";
+import { usage } from "@/lib/library";
+import { listItems, searchItems, syncIfNeeded } from "@/lib/library-items";
+import { countOpenDuplicates, mergeDueSoon } from "@/lib/library-match";
 
-/** Library listing, newest first, with signed view URLs and storage used. */
+const query = z.object({
+  kind: z.enum(["photo", "video"]).optional(),
+  setting: z.string().max(40).optional(),
+  q: z.string().trim().max(200).optional(),
+  before: z.string().max(100).optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(48),
+});
+
+/** Library listing (newest first) or a plain-words search, with signed view URLs and storage used. */
 export async function GET(req: Request) {
   return handle(async () => {
     await authorize(req, ["owner"]);
-    const params = new URL(req.url).searchParams;
-    const kind = params.get("kind");
-    const limit = Math.min(Math.max(Number(params.get("limit") ?? 48) || 48, 1), 100);
-    const [page, used] = await Promise.all([
-      listAssets({
-        kind: kind === "photo" || kind === "video" ? kind : undefined,
-        before: params.get("before") ?? undefined,
-        limit,
-      }),
+    const p = query.parse(Object.fromEntries(new URL(req.url).searchParams));
+    await syncIfNeeded();
+    mergeDueSoon();
+    const [page, used, duplicates] = await Promise.all([
+      p.q ? searchItems(p.q, p.limit) : listItems({ kind: p.kind, setting: p.setting, before: p.before, limit: p.limit }),
       usage(),
+      countOpenDuplicates(),
     ]);
-    return Response.json({ ...page, usage: used });
+    return Response.json({ ...page, usage: used, duplicates });
   });
 }

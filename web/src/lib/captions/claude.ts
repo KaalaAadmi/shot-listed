@@ -15,7 +15,7 @@ export function claudeModel(apiKey: string, model: string): JsonModel {
 
     async generateJson({ system, parts, schema }) {
       const text = parts.map((p) => {
-        if ("video" in p) throw new Error("Claude can't watch video here; Gemini handles that step");
+        if (!("text" in p)) throw new Error("Claude can't watch video or look at images here; Gemini handles that step");
         return p.text;
       });
 

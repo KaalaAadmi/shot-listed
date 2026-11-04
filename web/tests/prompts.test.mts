@@ -85,3 +85,30 @@ describe("prompt files", () => {
     }
   });
 });
+
+describe("renderPrompt", () => {
+  test("fills variables, leaves none behind, and stamps the version", async () => {
+    const { renderPrompt } = await import("../src/lib/prompts.ts");
+    const p = renderPrompt("caption-feedback", {
+      voicePrompt: "VOICE",
+      contentHistory: "HISTORY",
+      description: "DESC",
+      options: "OPTS",
+      draft: "1. Hook",
+      codeChecks: "Characters: 4 of 2200",
+      thread: "",
+      question: "Too long?",
+    });
+    assert.match(p.system, /^VOICE\n\nHISTORY/);
+    assert.match(p.user, /<question>\nToo long\?\n<\/question>/);
+    assert.doesNotMatch(p.system + p.user, /\{\{/);
+    assert.match(p.prompt, /^caption-feedback@\d+$/);
+    assert.throws(() => renderPrompt("nope", {}));
+  });
+});
+
+test("promptStamp is id@version", async () => {
+  const { promptStamp } = await import("../src/lib/prompts.ts");
+  assert.match(promptStamp("write-captions"), /^write-captions@\d+$/);
+  assert.throws(() => promptStamp("nope"));
+});

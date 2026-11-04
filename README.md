@@ -1,19 +1,25 @@
-# Reel Studio
+# ShotListed
 
 Turns saved Instagram reels into plans you can shoot and edit, using your own photos
 and videos. This repo is being built in phases. Built so far:
 
 - **Media library:** your photos and clips, managed from a Next.js web app on Vercel.
   The files and their records live in the separate **r2-storage** service (Cloudflare
-  R2 for the files, its own MongoDB database for the details); Reel Studio talks to it
+  R2 for the files, its own MongoDB database for the details); ShotListed talks to it
   through a small connector (`web/src/lib/storage/`).
 - **Captions from your final cut:** upload the reel you exported from Edits; Gemini
   watches it with sound, describes it, and your v3.0 Social Media Manager prompt writes
   three caption options with keywords, hashtags, a recommended pick and a review,
   ready to copy into Instagram.
+- **Inbox, Ideas, Plans, Shoot, Board:** a shared reel or your own idea becomes a Reel
+  Plan (hooks, shots matched to your clips or Pexels stock, Film it cards, audio, edit
+  notes) you can change by chat and undo. Upload takes onto Film it cards (the host
+  checks them), make a numbered clip pack, move the plan across the Board, link the
+  final cut so captions know the plan, and mark it Posted with its numbers. Posting
+  feeds format freshness, and you can add a history entry to Settings → Content history.
 
 ```
-web/               Next.js 16 app (Vercel): Library, Captions, Settings, API
+web/               Next.js 16 app (Vercel): Inbox, Ideas, Plans, Shoot, Board, Library, Captions, Settings, API
 web/src/lib/storage/  Connector for the r2-storage service
 docs/mac-agent.md  What the Mac mini agent will do once you have the Mac
 docs/              PRD, TRD, APP_FLOW, DATABASE_SCHEMA, IMPLEMENTATION_PLAN, SPLIT_GUIDE
@@ -22,7 +28,7 @@ prompts/           Every model prompt, its output schema and test cases (README 
 
 ## How uploads work
 
-The phone never sends files through Vercel. Reel Studio asks the storage service for a
+The phone never sends files through Vercel. ShotListed asks the storage service for a
 short-lived signed URL and the browser uploads straight to R2:
 
 1. The browser hashes the file (SHA-256, 8 MiB at a time; the row shows **Checking**).
@@ -38,7 +44,7 @@ short-lived signed URL and the browser uploads straight to R2:
    size and only marks the item uploaded if it matches.
 
 These routes check who is calling (your session, the Shortcut's or the Mac agent's
-token) and pass the request to the storage service with Reel Studio's API key. Files
+token) and pass the request to the storage service with ShotListed's API key. Files
 land at `apps/shot-listed/<collection>/YYYY/MM/<id>.<ext>` (`library` or `finals`). The
 bucket stays private; the Library shows items through signed URLs that expire after an
 hour.
@@ -114,14 +120,14 @@ already uploaded is recognised by its content hash and never stored twice.
 ### 1. The storage service
 
 Set up and deploy the **r2-storage** repo first; its README walks through the R2
-bucket, its own Atlas project and the Vercel deploy. Then create Reel Studio's key there:
+bucket, its own Atlas project and the Vercel deploy. Then create ShotListed's key there:
 
 ```bash
 ADMIN_TOKEN=... npm run create-key -- --url https://<your-storage>.vercel.app \
   --app shot-listed --name vercel --scopes read,write,delete
 ```
 
-Keep the printed `rsk_…` key for `STORAGE_API_KEY` below. Add Reel Studio's domain to
+Keep the printed `rsk_…` key for `STORAGE_API_KEY` below. Add ShotListed's domain to
 the bucket's CORS rule in that repo's `infra/r2-cors.json` once you know it.
 
 ### 2. MongoDB Atlas
@@ -144,13 +150,13 @@ refused even if it signs in. In Clerk, also set the sign-up mode to Restricted s
    `STORAGE_API_KEY`. Generate the two tokens with `openssl rand -hex 32`. Get
    `GEMINI_API_KEY` from Google AI Studio.
 3. Deploy, then add the deployed domain to the R2 bucket's CORS rule (r2-storage repo).
-4. Run `npm run check:storage` locally with the same two storage values in `.env.local`.
+4. Run `npm run check:storage` locally with the same two storage values in `.env`.
 
 ## Local development
 
 ```bash
 cd web
-cp .env.example .env.local   # fill it in
+cp .env.example .env   # fill it in
 npm install
 npm run dev                  # http://localhost:3000
 ```
@@ -185,11 +191,34 @@ For local work you can run the storage service on your machine with no database
 | `GET` / `PATCH` / `DELETE /api/finals/{id}` | you | One final cut; rename, save notes or selected caption; delete |
 | `POST /api/finals/{id}/run` | you | Retry from the failed step, or `{"from":"captions","direction":"…"}` for a new round |
 | `DELETE /api/finals/{id}/video` | you | Delete the video, keep the text |
+| `GET` / `POST /api/inspirations` | you (POST also Shortcut) | Inbox list; share a reel by link (or an uploaded file) |
+| `POST /api/inspirations/{id}/make`, `/retry`, `/file` | you | Make (or Make anyway), retry a failed step, attach a video you uploaded |
 | `POST /api/agent/heartbeat` | agent | Mac check-in; returns whether to sync |
 | `GET /api/agent/status` | you | Mac status for Settings |
 
 "You" means your Clerk session. The Shortcut and the agent send their token in the
 `X-Reel-Token` header (not `Authorization`, which Clerk reserves for its own sessions).
+
+## Share a reel from Instagram
+
+The Shortcut sends the link to ShotListed; the pipeline host downloads the reel, Gemini watches it with sound, and a score and verdict (Make now, Make with a twist, Skip) land in the **Inbox**.
+
+**Build the Shortcut once** (Shortcuts app → + → name it "ShotListed"):
+
+1. Tap the ⓘ button → turn on **Show in Share Sheet** → set Share Sheet Types to **URLs** only.
+2. Add **Ask for Input** (type Text, prompt "Note (optional)", leave Allow Multiple Lines off). Put it first so the note is optional on the share sheet.
+3. Add **Get Contents of URL**:
+   - URL: `https://<your-shot-listed>.vercel.app/api/inspirations`
+   - Method: **POST**
+   - Headers: `X-Reel-Token` = your `SHORTCUT_TOKEN`, `Content-Type` = `application/json`
+   - Request Body: **JSON**, with `url` = *Shortcut Input* and `note` = *Provided Input* (the text from step 2).
+4. Add **Show Notification** "Sent".
+
+Then, in Instagram: Share → More → **ShotListed**. A phone notification arrives when the verdict is in if you set `NTFY_TOPIC` (below).
+
+**Notifications:** install the free ntfy app, subscribe to a long random topic name, and set it as `NTFY_TOPIC` in Vercel.
+
+**Download problems:** the host uses the burner account's cookies (`IG_COOKIES_FILE`, see `pipeline/README.md`). If Instagram still refuses, the Inbox card offers **Upload the video instead**.
 
 ## Storage budget
 
@@ -204,8 +233,7 @@ Full plan with what's done: `docs/IMPLEMENTATION_PLAN.md`. How storage was split
 `docs/SPLIT_GUIDE.md`.
 
 1. Deploy both projects and run the checks in `docs/SPLIT_GUIDE.md` §3.
-2. Pipeline host on the free Oracle VM: proxies, thumbnails, AI tagging and search.
-3. Share-a-reel Shortcut (uses `SHORTCUT_TOKEN`) and the reel analysis.
-4. Live pipeline view for the full reel plan; the Captions screen's step strip is its
-   first, simpler version.
-5. Mac mini agent, once the Mac arrives.
+2. Set up the pipeline host on the free Oracle VM (jobs: `index-asset`,
+   `ingest-inspiration`, `analyse-inspiration`, `check-take`, `clip-pack`).
+3. Add `GEMINI_API_KEY`, then `PEXELS_API_KEY` and `NTFY_TOPIC` if you want stock and phone alerts.
+4. Mac mini agent, once the Mac arrives.

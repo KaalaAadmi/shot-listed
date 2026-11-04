@@ -10,6 +10,7 @@ function statusOf(f: FinalView): { label: string; tone: "busy" | "ok" | "bad" | 
   const steps = Object.values(f.steps);
   if (steps.some((s) => s.status === "failed")) return { label: "Needs a retry", tone: "bad" };
   if (f.busy) return { label: "Writing…", tone: "busy" };
+  if (steps.some((s) => s.status === "needs_you")) return { label: "Check the description", tone: "busy" };
   if (f.captions) return { label: "Captions ready", tone: "ok" };
   return { label: "Waiting", tone: "idle" };
 }

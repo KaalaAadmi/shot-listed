@@ -1,4 +1,4 @@
-# Reel Studio — Database Schema
+# ShotListed — Database Schema
 
 MongoDB Atlas (M0, its own Atlas project), database `reel_studio`. Media files and their records are not stored here: they live in R2 behind the `r2-storage` service, which keeps its records in its own MongoDB database (see that repo's `docs/DATABASE_SCHEMA.md`).
 
@@ -10,14 +10,14 @@ Status legend: **Done** (exists in code), **Changes in the split**, **Planned**.
 | `settings` | Library source, caption voice, hashtag preferences | Done |
 | `agents` | Mac mini check-ins | Done |
 | `finals` | Final cuts: steps, description, caption rounds, your pick | Done |
-| `library_items` | What Reel Studio knows about each storage asset: tags, embedding, capture data, perceptual hashes | Planned (phase 6, with indexing) |
-| `duplicates` | Pairs of items that show the same shot, and what you decided | Planned (phase 6) |
-| `inspirations` | Shared or synced reels, their analysis and verdict | Planned |
-| `ideas` | Your own ideas: the idea chat and the brief it ends in | Planned (phase 8b) |
-| `plans` | Reel Plans: hooks, shots, Film it cards, takes, clip pack, plan chat and versions | Planned |
-| `stock` | Cached Pexels searches | Planned |
-| `jobs` | Work queue for the pipeline host | Planned |
-| `runs` | Step events behind the live pipeline view | Planned |
+| `library_items` | What ShotListed knows about each storage asset: tags, embedding, capture data, perceptual hashes | Done |
+| `duplicates` | Pairs of items that show the same shot, and what you decided | Done |
+| `inspirations` | Shared or synced reels, their analysis and verdict | Done |
+| `ideas` | Your own ideas: the idea chat and the brief it ends in | Done |
+| `plans` | Reel Plans: hooks, shots, Film it cards, takes, clip pack, plan chat and versions | Done |
+| `stock` | Cached Pexels searches | Done |
+| `jobs` | Work queue for the pipeline host | Done |
+| `runs` | Step events behind the live pipeline view | Done |
 
 IDs are UUID strings (`crypto.randomUUID()`), except `settings` (`"app"`) and `agents` (machine name). Dates are BSON dates; the API serialises them as ISO strings.
 
@@ -27,9 +27,9 @@ Every stored model result (descriptions, caption rounds, feedback turns, tags, a
 
 ## `assets` — Moved to the storage service
 
-Before the split, Reel Studio kept one `assets` document per uploaded file here. That collection now lives in the `r2-storage` service's own database (`r2_storage`, in its own Atlas project), with the same fields plus `app`, `collection` (was `purpose`: `library`, `finals`) and `metadata.origin` (was `origin`). See that repo's `docs/DATABASE_SCHEMA.md`.
+Before the split, ShotListed kept one `assets` document per uploaded file here. That collection now lives in the `r2-storage` service's own database (`r2_storage`, in its own Atlas project), with the same fields plus `app`, `collection` (was `purpose`: `library`, `finals`) and `metadata.origin` (was `origin`). See that repo's `docs/DATABASE_SCHEMA.md`.
 
-Reel Studio no longer reads or writes it; it asks the storage API. Asset IDs are the same strings everywhere: `finals.assetId` and, from phase 6, `library_items._id` are storage asset IDs. Nothing was uploaded to production before the split; if a development database still has an `assets` collection, it is unused and can be dropped.
+ShotListed no longer reads or writes it; it asks the storage API. Asset IDs are the same strings everywhere: `finals.assetId` and, from phase 6, `library_items._id` are storage asset IDs. Nothing was uploaded to production before the split; if a development database still has an `assets` collection, it is unused and can be dropped.
 
 ## `settings` — Done
 
@@ -42,8 +42,8 @@ One document, `_id: "app"`. Unset fields fall back to defaults in code.
 | `captionContentHistory` | string? | Your content history reference |
 | `hashtagPlacement` | `"caption" \| "first-comment"` | `"caption"` |
 | `blankLineBeforeHashtags` | boolean | `false` |
-| `creatorProfile` | string? (Planned, 3b) | `prompts/creator-profile.default.md` |
-| `checkDescriptionFirst` | boolean (Planned, 3b) | `true` |
+| `creatorProfile` | string?  | `prompts/creator-profile.default.md` |
+| `checkDescriptionFirst` | boolean  | `true` |
 | `updatedAt` | Date | |
 
 Setting a prompt field to `null` through the API removes it, which restores the default. Older documents may still carry `captionInstructions` or `captionGoal` from the first captions build; they are ignored.
@@ -68,14 +68,14 @@ Defined as `FinalDoc` in `web/src/lib/types.ts`.
 | `assetId` | string \| null | The final cut's storage asset; `null` after **Delete video** |
 | `title`, `titleIsDefault` | string, boolean? | The model's title replaces the file name until you rename it |
 | `notes` | string | Your context for the caption writer |
-| `steps` | `{ watch, describe, captions }`; Planned: `review` between `describe` and `captions` | Each `{ status: "waiting" \| "running" \| "done" \| "failed", startedAt?, finishedAt?, error? }`; `review` also uses `needs_you` and `skipped` |
+| `steps` | `{ watch, describe, captions }`; `review` between `describe` and `captions` | Each `{ status: "waiting" \| "running" \| "done" \| "failed", startedAt?, finishedAt?, error? }`; `review` also uses `needs_you` and `skipped` |
 | `modelFile` | `{ name, uri, mimeType }`? | The Gemini file between watch and describe; removed after |
 | `description` | object? | See below |
 | `captions` | object? | See below |
-| `selected` | `{ captionId, text, hashtags[] }`? | Your pick and edits; `captionId: "draft"` when it came from your draft (Planned) |
-| `descriptionEdited` | boolean? | Planned: you corrected the description at the review step |
-| `draft` | `{ lines: string[], hashtags: string[], updatedAt }`? | Planned: your own caption built from parts of the options |
-| `feedback` | object[]? | Planned: the feedback thread, up to 30 turns. Each `{ at, question?, draft: { lines, hashtags }, reply: { verdict, score, checks, suggestions[], answer }, writtenBy }` |
+| `selected` | `{ captionId, text, hashtags[] }`? | Your pick and edits; `captionId: "draft"` when it came from your draft |
+| `descriptionEdited` | boolean? | You corrected the description at the review step |
+| `draft` | `{ lines: string[], hashtags: string[], updatedAt }`? | Your own caption built from parts of the options |
+| `feedback` | object[]? | The feedback thread, up to 30 turns. Each `{ at, question?, draft: { lines, hashtags }, reply: { verdict, score, checks, suggestions[], answer }, writtenBy }` |
 | `createdAt`, `updatedAt` | Date | |
 
 `description`:
@@ -98,13 +98,13 @@ Rounds written before the v3.0 change have one shared `hashtags[]` and no feedba
 
 Indexes: `{ createdAt: -1 }`, `{ assetId: 1 }`.
 
-Planned additions: `planId` (link to the plan it came from), `postedAt`.
+Also: `planId` (the plan it came from; its hooks and intent go to the caption writer), `descriptionPrompt`, `captionsPrompt`, `FeedbackTurn.prompt` (prompt stamps, `id@version`).
 
 ---
 
-## `library_items` — Planned
+## `library_items` — Done
 
-One per storage asset Reel Studio cares about, created when indexing arrives in phase 6 (until then the Library lists straight from storage). `_id` equals the storage asset ID, so no mapping table is needed.
+One per storage asset ShotListed cares about, created when indexing arrives in phase 6 (until then the Library lists straight from storage). `_id` equals the storage asset ID, so no mapping table is needed.
 
 | Field | Type | Notes |
 | --- | --- | --- |
@@ -130,7 +130,7 @@ Indexes: `{ purpose: 1, createdAt: -1 }`, `{ "index.status": 1 }`, `{ kind: 1, c
 
 Size check: 5,000 items × ~15 KB ≈ 75 MB, well inside 512 MB.
 
-## `duplicates` — Planned
+## `duplicates` — Done
 
 One document per pair. Rules in TRD §4.1.
 
@@ -147,7 +147,7 @@ One document per pair. Rules in TRD §4.1.
 
 Indexes: `{ status: 1, mergeAfter: 1 }` (the daily merge job), `{ keepId: 1 }`, `{ otherId: 1 }`. `kept-both` pairs are kept forever so they are never suggested again.
 
-## `inspirations` — Planned
+## `inspirations` — Done
 
 | Field | Type | Notes |
 | --- | --- | --- |
@@ -167,7 +167,7 @@ Indexes: `{ status: 1, mergeAfter: 1 }` (the daily merge job), `{ keepId: 1 }`, 
 
 Indexes: `{ shortcode: 1 }` (unique), `{ status: 1, createdAt: -1 }`.
 
-## `ideas` — Planned
+## `ideas` — Done
 
 | Field | Type | Notes |
 | --- | --- | --- |
@@ -184,7 +184,7 @@ Indexes: `{ shortcode: 1 }` (unique), `{ status: 1, createdAt: -1 }`.
 
 Index: `{ status: 1, updatedAt: -1 }`.
 
-## `plans` — Planned
+## `plans` — Done
 
 | Field | Type | Notes |
 | --- | --- | --- |
@@ -218,11 +218,11 @@ Also: `version` (number, starts at 1), `history[]` (the last 10 shot lists, each
 
 Indexes: `{ status: 1, updatedAt: -1 }`, `{ "source.kind": 1, "source.id": 1 }`, `{ postedAt: -1 }`.
 
-## `stock` — Planned
+## `stock` — Done
 
 `_id` = `query|orientation`; `results[]` of `{ pexelsId, url, credit, duration, width, height }`; `fetchedAt` with a TTL index of 30 days.
 
-## `jobs` — Planned
+## `jobs` — Done
 
 | Field | Type | Notes |
 | --- | --- | --- |
@@ -238,7 +238,7 @@ Indexes: `{ status: 1, updatedAt: -1 }`, `{ "source.kind": 1, "source.id": 1 }`,
 
 Indexes: `{ status: 1, createdAt: 1 }` for claiming; TTL on `updatedAt` for `done` jobs after 30 days (partial filter).
 
-## `runs` — Planned
+## `runs` — Done
 
 | Field | Type | Notes |
 | --- | --- | --- |
@@ -251,3 +251,11 @@ Indexes: `{ status: 1, createdAt: 1 }` for claiming; TTL on `updatedAt` for `don
 Index: `{ subjectId: 1, createdAt: -1 }`. TTL 30 days after the run finishes.
 
 Finals keep their own `steps` (above) and can move to `runs` later; not required.
+
+## Added during the build
+
+- `inspirations`: `analysisPrompt`, `viabilityPrompt`, `overridden`, `source: "upload"`, `planId`.
+- `runs`: `finishedAt`.
+- `ideas`: `assumptions`, `questions`, `readiness`, `folded`, `prompts`.
+- `plans`: shot `id`, `searching`, `note`; take `verdict` (including `checking` and `failed`), `fix`, `useFrom`, `useTo`, `overridden`; plan `build`, `error`, `folded`, `summary`, `prompts`, `postedAt`, `postedNumbers` (`views`, `reach`, `likes`, `shares`, `saves`, `comments`, all optional). `packUrl` is added to the view only.
+- `jobs`: types do not include `merge-duplicates`; merging runs in the web app (`mergeDueSoon`). `plan` and `plan-edit` are unused: plans are built in the web app (`after()`). `check-take` and `clip-pack` run on the host.

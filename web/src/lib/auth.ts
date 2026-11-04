@@ -3,8 +3,8 @@ import { timingSafeEqual } from "node:crypto";
 import { auth } from "@clerk/nextjs/server";
 import { env } from "./env";
 
-/** Who is calling: you in the browser, the iOS Shortcut, or the Mac mini agent. */
-export type Caller = "owner" | "shortcut" | "agent";
+/** Who is calling: you in the browser, the iOS Shortcut, the Mac mini agent, or the pipeline host. */
+export type Caller = "owner" | "shortcut" | "agent" | "host";
 
 export class HttpError extends Error {
   constructor(
@@ -32,15 +32,16 @@ export const TOKEN_HEADER = "x-reel-token";
 export async function authorize(req: Request, allowed: Caller[]): Promise<Caller> {
   const token = req.headers.get(TOKEN_HEADER)?.trim();
   if (token) {
-    const { SHORTCUT_TOKEN, AGENT_TOKEN } = env();
+    const { SHORTCUT_TOKEN, AGENT_TOKEN, HOST_TOKEN } = env();
     if (allowed.includes("shortcut") && sameSecret(token, SHORTCUT_TOKEN)) return "shortcut";
     if (allowed.includes("agent") && sameSecret(token, AGENT_TOKEN)) return "agent";
+    if (allowed.includes("host") && HOST_TOKEN && sameSecret(token, HOST_TOKEN)) return "host";
     throw new HttpError(401, "Invalid token");
   }
 
   if (!allowed.includes("owner")) throw new HttpError(401, "Token required");
   const { userId } = await auth();
   if (!userId) throw new HttpError(401, "Sign in required");
-  if (userId !== env().OWNER_USER_ID) throw new HttpError(403, "This Reel Studio belongs to someone else");
+  if (userId !== env().OWNER_USER_ID) throw new HttpError(403, "This ShotListed belongs to someone else");
   return "owner";
 }

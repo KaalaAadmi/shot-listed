@@ -13,7 +13,7 @@ const body = z.object({
   lastModified: z.number().int().nonnegative().optional(),
   takenAt: z.string().datetime({ offset: true }).optional(),
   externalId: z.string().min(1).max(200).optional(),
-  purpose: z.enum(["library", "final-cut"]).optional(),
+  purpose: z.enum(["library", "final-cut", "inspiration"]).optional(),
 });
 
 /**

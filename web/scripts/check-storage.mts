@@ -1,12 +1,12 @@
-// Checks Reel Studio can reach and use the storage service with its own key.
-//   npm run check:storage            (reads .env.local)
+// Checks ShotListed can reach and use the storage service with its own key.
+//   npm run check:storage            (reads .env)
 // Uploads a 1 KB file through the connector's client, uploads it again (expects
 // "duplicate"), reads it back, then deletes it.
 import { createHash, randomBytes } from "node:crypto";
 import { createStorageClient } from "../src/lib/storage/client.ts";
 
 try {
-  process.loadEnvFile?.(".env.local");
+  process.loadEnvFile?.(".env");
 } catch {
   // variables may already be set
 }
@@ -14,7 +14,7 @@ try {
 const url = process.env.STORAGE_API_URL;
 const apiKey = process.env.STORAGE_API_KEY;
 if (!url || !apiKey) {
-  console.error("Set STORAGE_API_URL and STORAGE_API_KEY (in .env.local or the environment).");
+  console.error("Set STORAGE_API_URL and STORAGE_API_KEY (in .env or the environment).");
   process.exit(1);
 }
 
@@ -48,7 +48,7 @@ try {
 
   const used = await storage.usage();
   ok(`usage: ${(used.bytes / 1024 ** 2).toFixed(1)} MB of ${(used.freeTierBytes / 1024 ** 3).toFixed(0)} GB`);
-  console.log("\nReel Studio ↔ storage: all good.");
+  console.log("\nShotListed ↔ storage: all good.");
 } catch (err) {
   console.error(`\n✗ ${err instanceof Error ? err.message : err}`);
   process.exit(1);

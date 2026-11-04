@@ -1,4 +1,4 @@
-# Reel Studio — App Flow
+# ShotListed — App Flow
 
 Status legend: **Done** (built, typechecked, tested; not yet deployed), **Partly done**, **Planned**.
 
@@ -6,23 +6,23 @@ Status legend: **Done** (built, typechecked, tested; not yet deployed), **Partly
 
 ```mermaid
 flowchart TD
-  save["Save or see a reel on Instagram"] --> share["Share → Reel Studio Shortcut<br/>(Planned)"]
-  share --> inbox["Inbox: download, watch, verdict<br/>(Planned)"]
+  save["Save or see a reel on Instagram"] --> share["Share → ShotListed Shortcut"]
+  share --> inbox["Inbox: download, watch, verdict"]
   inbox -->|Skip| done1["Archived with the reason"]
-  inbox -->|Make now / twist| plan["Reel Plan: hooks, shots, text, audio,<br/>plan chat (Planned)"]
-  idea["Your own idea"] --> ideachat["Idea chat → Reel brief<br/>(Planned)"]
+  inbox -->|Make now / twist| plan["Reel Plan: hooks, shots, text, audio,<br/>plan chat"]
+  idea["Your own idea"] --> ideachat["Idea chat → Reel brief"]
   ideachat -->|Make the plan| plan
   plan --> filmit{"Shots missing?"}
-  filmit -->|yes| shoot["Film it cards → Shoot list<br/>upload takes → checked<br/>(Planned)"]
-  filmit -->|no| pack["Clip pack: numbered, trimmed clips<br/>(Planned)"]
+  filmit -->|yes| shoot["Film it cards → Shoot list<br/>upload takes → checked"]
+  filmit -->|no| pack["Clip pack: numbered, trimmed clips"]
   shoot --> pack
   pack --> edits["You assemble in Edits,<br/>add text and audio"]
   edits --> final["Upload the export → Captions<br/>(Done)"]
-  final --> check["Check the description<br/>(Planned)"]
-  check --> options["Three options; build a draft,<br/>ask for feedback (Planned)"]
+  final --> check["Check the description"]
+  check --> options["Three options; build a draft,<br/>ask for feedback"]
   options --> copy["Pick or use your draft,<br/>Copy caption (Done)"]
   copy --> post["You post on Instagram"]
-  post --> board["Board: mark Posted, add numbers<br/>to content history (Planned)"]
+  post --> board["Board: mark Posted, add numbers<br/>to content history"]
 ```
 
 ## 2. Screens
@@ -34,14 +34,14 @@ flowchart TD
 | Captions list | `/finals` | Done |
 | Caption detail | `/finals/[id]` | Done |
 | Settings | `/settings` | Done |
-| Inbox | `/inbox` | Planned |
-| Ideas | `/ideas` | Planned |
-| Idea chat and brief | `/ideas/[id]` | Planned |
-| Reel Plan | `/plans/[id]` | Planned |
-| Shoot list | `/shoot` | Planned |
-| Board | `/board` | Planned |
+| Inbox | `/inbox` | Done |
+| Ideas | `/ideas` | Done |
+| Idea chat and brief | `/ideas/[id]` | Done |
+| Reel Plan | `/plans/[id]` | Done |
+| Shoot list | `/shoot` | Done |
+| Board | `/board` | Done |
 
-Navigation (top bar, after sign-in): Library · Captions · Settings. Planned additions: Inbox, Ideas, Board, Shoot list.
+Navigation (top bar, after sign-in): Inbox · Ideas · Plans · Shoot · Board · Library · Captions · Settings. Also: Inbox, Ideas, Plans, Shoot, Board.
 
 ## 3. Flows
 
@@ -64,9 +64,9 @@ Navigation (top bar, after sign-in): Library · Captions · Settings. Planned ad
 4. The grid refreshes when uploads settle. The usage bar shows GB used of the 10 GB free tier.
 5. Tap an item: full preview, **Download**, **Delete** (removes it from storage, not from your phone).
 
-Planned additions: search in plain words, tag chips you can correct, "exclude from plans".
+Also: search in plain words, tag chips you can correct, "exclude from plans".
 
-### 3.2a Duplicates — Planned (phase 6)
+### 3.2a Duplicates — Done
 
 1. Identical files never get in (3.2). Copies that differ as files but show the same shot are found while indexing.
 2. **Same** matches: the newer copy disappears from the grid at once. A banner says "Merged 2 copies of the same shot · Undo" and stays available under Library → **Merged** for 7 days. After that, the better file is kept and the other deleted.
@@ -89,7 +89,7 @@ Planned additions: search in plain words, tag chips you can correct, "exclude fr
 7. **Copy caption** → paste into Instagram as is. **Copy hashtags**; **Copy first comment** when hashtags go in the comment.
 8. **Delete video** frees storage and keeps the text; **Delete this final cut** removes everything.
 
-### 3.3a Check the description, build a draft, ask for feedback — Planned (phase 3b)
+### 3.3a Check the description, build a draft, ask for feedback — Done (phase 3b)
 
 Changes to 3.3 once this ships:
 
@@ -112,21 +112,21 @@ Changes to 3.3 once this ships:
    - Save, Discard changes, Restore default.
    - Add each new reel's numbers to the history after posting.
 3. **Where hashtags go**: end of caption or first comment. **Blank line before hashtags** (off by default).
-4. Planned (phase 3b): **Creator profile**, editable with Restore default, used by ideas and plans. **Check the description first** (on by default).
+4. **Creator profile**, editable with Restore default, used by ideas and plans. **Check the description first** (on by default).
 
-### 3.5 Share a reel — Planned
+### 3.5 Share a reel — Done
 
-1. In Instagram: Share → **Reel Studio** (iOS Shortcut). Optionally type a note.
+1. In Instagram: Share → **ShotListed** (iOS Shortcut). Optionally type a note.
 2. The Shortcut sends the link with `SHORTCUT_TOKEN` and shows "Sent".
 3. A phone notification arrives when the verdict is in.
 
-### 3.6 Inbox and verdict — Planned
+### 3.6 Inbox and verdict — Done
 
 1. Each shared reel appears with a slim progress bar: Downloading → Watching → Scoring.
 2. The verdict: **Make now**, **Make with a twist**, or **Skip**, with score and reason.
 3. Make → the plan starts automatically. Skip → archived; **Make anyway** overrides.
 
-### 3.6a Your own idea — Planned (phase 8b)
+### 3.6a Your own idea — Done
 
 1. **Ideas → New idea.** Describe it in your own words: "a gym reel where the rest timer is my anime power-up".
 2. **Idea chat.** The model asks what it needs (who it's for, the twist, the ending), tells you honestly if the hook is weak or the format is one you posted recently, and suggests variations. Chat as long as you like.
@@ -139,7 +139,7 @@ Changes to 3.3 once this ships:
 4. A viability score and its reasons show beside the brief, for information only.
 5. **Make the plan.** Same as for a shared reel (3.7): clips that fit each beat, Film it cards for the rest, shot order, text, audio, clip pack.
 
-### 3.7 Reel Plan — Planned
+### 3.7 Reel Plan — Done
 
 Plans from a shared reel and from your own brief look the same.
 
@@ -157,21 +157,21 @@ Plans from a shared reel and from your own brief look the same.
    - "I don't have a gym mirror shot, what else works?": the plan looks for other clips ("Looking for clips…"), then places one graded Exact or Works, or turns the shot into a Film it card and says why.
    Each change makes a new version; **Undo** goes back one.
 
-### 3.8 Film it and takes — Planned
+### 3.8 Film it and takes — Done
 
 1. A Film it card: reference frame, shot, where, framing and lens, movement, text space, light and sound, length to record, two takes.
 2. **Upload takes** on the card, or shoot and let the next library sync offer clips recorded after the card was made.
 3. Each take is checked: **Pass** (slotted in), **Usable** (with a note), **Reshoot** (the card reopens with the fix). **Use anyway** overrides.
 4. The **Shoot list** groups open cards by location across all plans.
 
-### 3.9 Board — Planned
+### 3.9 Board — Done
 
-Columns Planned → Filming → Editing → Ready to post → Posted. Marking Posted sets the date and feeds format freshness. A reminder links to Settings → Content history to add the numbers.
+Columns Planned → Filming → Editing → Ready to post → Posted. Marking Posted sets the date and feeds format freshness. On a plan, type the numbers, then **Draft a history entry** and **Add to history** (only when you tap) append it to Settings → Content history.
 
 ### 3.10 Switch to the Mac mini — Server side Done; agent Planned
 
 1. Install the agent on the Mac and give it `AGENT_TOKEN`.
 2. It appears in Settings as Online.
 3. Choose **Sync from the Mac mini**. The agent syncs new Photos items; phone uploads still work for takes.
-4. Photos you already uploaded from the phone aren't stored again. The agent checks each one first, and Reel Studio either attaches the Photos ID to the existing item, or takes the Mac's file if it's better and merges the two (3.2a). Final cuts in the camera roll are skipped.
+4. Photos you already uploaded from the phone aren't stored again. The agent checks each one first, and ShotListed either attaches the Photos ID to the existing item, or takes the Mac's file if it's better and merges the two (3.2a). Final cuts in the camera roll are skipped.
 5. A sync that was interrupted carries on where it stopped.

@@ -20,6 +20,10 @@ const body = z
       text: z.string().max(5000),
       hashtags: z.array(z.string().max(100)).max(30),
     }),
+    draft: z.object({
+      lines: z.array(z.string().max(1000)).max(30),
+      hashtags: z.array(z.string().max(100)).max(30),
+    }),
   })
   .partial();
 

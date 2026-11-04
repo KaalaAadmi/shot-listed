@@ -1,10 +1,10 @@
-# Storage split: Reel Studio and r2-storage
+# Storage split: ShotListed and r2-storage
 
-Reel Studio is now two GitHub repos:
+ShotListed is now two GitHub repos:
 
 | Repo | What it is | Runs on |
 | --- | --- | --- |
-| `reel-studio` | The app: Library, Captions, Settings, and later inspirations, plans, Film it and the Board. Talks to storage only through a small connector. | Vercel (web), Oracle VM (pipeline host, later), its own MongoDB Atlas project |
+| `shot-listed` | The app: Library, Captions, Settings, and later inspirations, plans, Film it and the Board. Talks to storage only through a small connector. | Vercel (web), Oracle VM (pipeline host, later), its own MongoDB Atlas project |
 | `r2-storage` | A general media storage service: uploads straight from the browser to R2, duplicate checks, resuming, an asset registry, signed links, derived files and usage. Knows nothing about reels. | Its own Vercel project (Hono on Node), its own MongoDB Atlas project, Cloudflare R2 |
 
 `r2-storage` is a working name; rename it freely. Each app gets its own API key and space, so it can later be the backend of your own cloud storage app.
@@ -15,24 +15,24 @@ Reel Studio is now two GitHub repos:
 
 ## 1. What moved where
 
-Paths are relative to the `reel-studio` repo as it was before the split.
+Paths are relative to the `shot-listed` repo as it was before the split.
 
 ### Moved to `r2-storage`
 
-| Was in `reel-studio` | Now in `r2-storage` | Changes |
+| Was in `shot-listed` | Now in `r2-storage` | Changes |
 | --- | --- | --- |
 | `web/src/lib/media/r2.ts` | `src/r2.ts` | Same AWS SDK wrapper (signed PUT, multipart, part URLs, `ListParts`, `HEAD`, signed GET, delete); link lifetime is now a parameter. |
 | `web/src/lib/media/keys.ts` | `src/keys.ts` | Keys gain an app and collection: `apps/<app>/<collection>/YYYY/MM/<id>.<ext>`; variants at `apps/<app>/variants/<id>/<name>.<ext>`. |
 | `web/src/lib/media/policy.ts` (types, sizes, parts) | `src/policy.ts` | Same rules, plus GIF, WebM, zip, PDF, JSON and text. |
 | `web/src/lib/media/dedupe.ts` | `src/dedupe.ts` | Unchanged; the hash match is now per collection. |
 | Upload and asset functions in `web/src/lib/library.ts` (`createUpload`, `uploadState`, `signUploadParts`, `completeUpload`, `abortUpload`, the internal `startNewUpload`, `resumeUpload`, `discardUpload`, `clearStaleUploads`, plus `deleteAsset`, `downloadUrl`, `usage`) | `src/assets.ts` | Same behaviour on its own MongoDB database (`r2_storage`) behind a `Store` interface. New: variants, dropping originals, merge, batch links, orphan retries. Stale cleanup is a daily Vercel Cron job instead of running on each upload. |
-| The `assets` collection in Reel Studio's database | `assets` in `r2_storage` | Same fields plus `app`, `collection` (was `purpose`), `metadata.origin` (was `origin`), `hasOriginal`, `variants`. |
+| The `assets` collection in ShotListed's database | `assets` in `r2_storage` | Same fields plus `app`, `collection` (was `purpose`), `metadata.origin` (was `origin`), `hasOriginal`, `variants`. |
 | Route logic of `web/src/app/api/media/**` | `src/app.ts` | Hono routes under `/v1` with API keys and scopes. |
 | `web/tests/r2.test.mts` | `test/s3.test.ts` | Same S3 round trips against moto. |
 | The duplicate-rule tests in `web/tests/dedupe.test.mts` | `test/policy.test.ts` | Same cases. |
 | `infra/r2-cors.json` | `infra/r2-cors.json` | Unchanged. |
 
-### Changed in `reel-studio`
+### Changed in `shot-listed`
 
 | File | Change |
 | --- | --- |
@@ -44,9 +44,9 @@ Paths are relative to the `reel-studio` repo as it was before the split.
 | `web/src/lib/env.ts`, `.env.example` | `R2_*` removed; `STORAGE_API_URL` and `STORAGE_API_KEY` added. |
 | `web/src/lib/media/policy.ts` | Trimmed to what the browser needs: the file picker's accept list, the hash format, part sizes for resuming. |
 | `web/tests/dedupe.test.mts` | Renamed `uploads.test.mts`; keeps the hashing and resume-planning tests. |
-| `README.md`, `docs/*` | Updated. `docs/mac-agent.md` didn't need to change: the agent only talks to Reel Studio. |
+| `README.md`, `docs/*` | Updated. `docs/mac-agent.md` didn't need to change: the agent only talks to ShotListed. |
 
-### New in `reel-studio`
+### New in `shot-listed`
 
 | File | Purpose |
 | --- | --- |
@@ -56,25 +56,25 @@ Paths are relative to the `reel-studio` repo as it was before the split.
 | `web/scripts/check-storage.mts` | `npm run check:storage`: health, a 1 KB upload, the same again (expects duplicate), read back, delete, usage. |
 | `web/tests/storage-client.test.mts` | The client with `fetch` stubbed: headers and body, 4xx without retry, retries, 204s, query strings. |
 
-### Deleted from `reel-studio`
+### Deleted from `shot-listed`
 
 `web/src/lib/media/r2.ts`, `keys.ts`, `dedupe.ts`, `web/tests/r2.test.mts`, `infra/r2-cors.json`, and the `@aws-sdk/client-s3` and `@aws-sdk/s3-request-presigner` dependencies. `hash-wasm` stays: the browser still hashes files.
 
 ### What did not move
 
-- Hashing (`web/src/lib/media/hash.ts`) and resume planning (`resume.ts`) stay in Reel Studio: they run in the browser.
-- `library_items` (tags, search data, same-shot matching) is Reel Studio's, and arrives with indexing in phase 6. Until then the Library lists straight from storage.
+- Hashing (`web/src/lib/media/hash.ts`) and resume planning (`resume.ts`) stay in ShotListed: they run in the browser.
+- `library_items` (tags, search data, same-shot matching) is ShotListed's, and arrives with indexing in phase 6. Until then the Library lists straight from storage.
 
 ---
 
 ## 2. Order to bring them up
 
-1. **R2:** bucket, CORS rule (`infra/r2-cors.json` in r2-storage, with Reel Studio's domains), lifecycle rule (abort incomplete multipart uploads after 1 day), API token for this bucket only.
-2. **Atlas, twice:** one project and free cluster for `r2-storage`, another for `reel-studio`. Each gets its own 512 MB.
+1. **R2:** bucket, CORS rule (`infra/r2-cors.json` in r2-storage, with ShotListed's domains), lifecycle rule (abort incomplete multipart uploads after 1 day), API token for this bucket only.
+2. **Atlas, twice:** one project and free cluster for `r2-storage`, another for `shot-listed`. Each gets its own 512 MB.
 3. **Deploy `r2-storage`** to its own Vercel project with its env vars. `curl <url>/v1/health`.
-4. **Create Reel Studio's key:** `ADMIN_TOKEN=… npm run create-key -- --url <storage url> --app shot-listed --name vercel --scopes read,write,delete`.
-5. **Deploy `reel-studio`** with `STORAGE_API_URL` and `STORAGE_API_KEY`, plus its existing variables.
-6. Nothing was uploaded to production before the split, so there is nothing to import. If that changes, r2-storage has `npm run import:reel-studio`.
+4. **Create ShotListed's key:** `ADMIN_TOKEN=… npm run create-key -- --url <storage url> --app shot-listed --name vercel --scopes read,write,delete`.
+5. **Deploy `shot-listed`** with `STORAGE_API_URL` and `STORAGE_API_KEY`, plus its existing variables.
+6. Nothing was uploaded to production before the split, so there is nothing to import. If that changes, r2-storage has `npm run import:shot-listed`.
 
 ---
 
@@ -86,12 +86,12 @@ Paths are relative to the `reel-studio` repo as it was before the split.
 2. With moto (`pip install "moto[server]"`, then `moto_server -p 5055 &`): `R2_TEST_ENDPOINT=http://127.0.0.1:5055 npm test` adds every upload, resume, link, variant, merge and cleanup flow.
 3. Against MongoDB: `MONGODB_TEST_URI="mongodb+srv://…" npm test` runs the same store rules on a throwaway database. **Not yet run**; do this once, before deploying.
 4. Deployed: `STORAGE_API_KEY=rsk_… npm run smoke -- https://<storage>.vercel.app`. Expect ten ticks: health, 1 KB upload, duplicate, 70 MB upload stopped after 3 parts, resumed with those 3, finished, bytes match, thumbnail, usage, deleted.
-5. In Cloudflare, check the bucket's CORS rule lists your Reel Studio domain and exposes `ETag`.
+5. In Cloudflare, check the bucket's CORS rule lists your ShotListed domain and exposes `ETag`.
 
-### `reel-studio` with the connector
+### `shot-listed` with the connector
 
 1. `cd web && npm run typecheck && npm run lint && npm test && npm run build`.
-2. `npm run check:storage` with `STORAGE_API_URL` and `STORAGE_API_KEY` in `.env.local`. Expect: up, uploaded, duplicate, read back, deleted, usage.
+2. `npm run check:storage` with `STORAGE_API_URL` and `STORAGE_API_KEY` in `.env`. Expect: up, uploaded, duplicate, read back, deleted, usage.
 3. On your phone, after deploying:
    - Library: add one photo and one video over 64 MB. Both appear with previews; the usage bar moves.
    - Pick the same photo again: **Already in library**.
@@ -99,7 +99,7 @@ Paths are relative to the `reel-studio` repo as it was before the split.
    - Captions: upload a final cut. The three steps run, the video plays, **Delete video** frees it.
    - Delete a library item; `GET /v1/assets/<id>` on storage then returns 404.
 
-Both checks were run against a local storage server (in-memory store, moto as R2): the storage smoke test and Reel Studio's `check:storage` both passed.
+Both checks were run against a local storage server (in-memory store, moto as R2): the storage smoke test and ShotListed's `check:storage` both passed.
 
 ### When something fails
 
@@ -107,7 +107,7 @@ Both checks were run against a local storage server (in-memory store, moto as R2
 | --- | --- |
 | Large uploads stop at 100% | Bucket CORS rule doesn't expose `ETag` |
 | 403 on the browser's PUT | Content-Type differs from the signed one, or the link expired (15 minutes); Retry gets a fresh one |
-| Reel Studio says the storage service had a problem (502) | Storage returned a 5xx: check its Vercel logs. Often the Atlas cluster is paused after 30 idle days, so resume it in the Atlas dashboard |
+| ShotListed says the storage service had a problem (502) | Storage returned a 5xx: check its Vercel logs. Often the Atlas cluster is paused after 30 idle days, so resume it in the Atlas dashboard |
 | 401 from storage | Wrong `STORAGE_API_KEY`, or the key was revoked |
 | 403 from storage | The key lacks a scope; create one with `read,write,delete` |
 | `check:storage` can't connect | `STORAGE_API_URL` is wrong, or the storage project isn't deployed |

@@ -21,7 +21,7 @@ Writes the creative parts of a Reel Plan after the clips are chosen: three hooks
 ---
 
 HOW THIS WORKS
-You write the plan I'll follow to make a Reel myself, inside Reel Studio, my own app. The shots are already decided: each one either uses a clip from my library, a stock clip, or is marked film_it because I don't have it yet. You write the words and directions around them.
+You write the plan I'll follow to make a Reel myself, inside ShotListed, my own app. The shots are already decided: each one either uses a clip from my library, a stock clip, or is marked film_it because I don't have it yet. You write the words and directions around them.
 
 Hooks: exactly 3 different ways to open (the on-screen text for the first 1–2 seconds). Short, punchy, in my tone. Each a different angle.
 

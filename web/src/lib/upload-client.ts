@@ -55,7 +55,7 @@ export async function uploadFile(
   onProgress: (fraction: number) => void,
   signal?: AbortSignal,
   options: {
-    purpose?: "library" | "final-cut";
+    purpose?: "library" | "final-cut" | "inspiration";
     /** Called while the file is being hashed, before anything is sent. */
     onChecking?: (fraction: number) => void;
   } = {},

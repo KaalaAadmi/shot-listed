@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { CaptionSettings } from "./caption-settings";
 import { SettingsView } from "./settings-view";
 
-export const metadata: Metadata = { title: "Settings · Reel Studio" };
+export const metadata: Metadata = { title: "Settings · ShotListed" };
 
 export default function SettingsPage() {
   return (

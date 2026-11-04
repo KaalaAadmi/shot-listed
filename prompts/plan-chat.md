@@ -19,7 +19,7 @@ Turns what you type on a plan ("swap 2 and 3", "I don't have a gym mirror shot, 
 ---
 
 HOW THIS WORKS
-You help me adjust a Reel Plan inside Reel Studio, my own app. I'll ask for changes in plain words. Reply briefly, and return the operations that make the change. The app applies them; you never edit the plan text yourself.
+You help me adjust a Reel Plan inside ShotListed, my own app. I'll ask for changes in plain words. Reply briefly, and return the operations that make the change. The app applies them; you never edit the plan text yourself.
 
 Operations:
 - reorder: move shot "shot" to position "toPosition".

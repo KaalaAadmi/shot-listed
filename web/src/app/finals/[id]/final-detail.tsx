@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { describeForPrompt } from "@/lib/captions/engine";
+import { describeForPrompt, type ReelDescription } from "@/lib/captions/engine";
+import type { Draft } from "@/lib/captions/feedback";
 import {
   cleanHashtags,
   formatForInstagram,
@@ -13,10 +14,13 @@ import {
 } from "@/lib/captions/instagram-format";
 import { copyText } from "@/lib/clipboard";
 import type { FinalView, StepName } from "@/lib/types";
+import { DraftPanel } from "./draft-panel";
+import { ReviewForm } from "./review-form";
 
 const STEPS: { name: StepName; label: string; running: string }[] = [
   { name: "watch", label: "Send to Gemini", running: "Sending the video" },
   { name: "describe", label: "Watch and describe", running: "Watching with sound" },
+  { name: "review", label: "Check the description", running: "" },
   { name: "captions", label: "Write captions", running: "Writing three options" },
 ];
 
@@ -134,11 +138,11 @@ export function FinalDetail({ id }: { id: string }) {
     }, 800);
   }
 
-  async function run(from?: StepName) {
+  async function run(from?: StepName, description?: ReelDescription) {
     const res = await fetch(`/api/finals/${id}/run`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ from, direction: from === "captions" ? direction : undefined }),
+      body: JSON.stringify({ from, description, direction: from === "captions" ? direction : undefined }),
     });
     const body = (await res.json().catch(() => ({}))) as { error?: string };
     if (!res.ok) {
@@ -147,6 +151,20 @@ export function FinalDetail({ id }: { id: string }) {
     }
     dirty.current = false;
     apply(await fetchFinal(id));
+  }
+
+  async function saveDraft(d: Draft) {
+    await patch({ draft: d });
+  }
+
+  /** Makes your own draft the caption that Copy caption uses. */
+  function useDraft(text: string, hashtags: string[]) {
+    dirty.current = false;
+    clearTimeout(saveTimer.current);
+    setDraft(text);
+    setTagsDraft(hashtagLine(hashtags));
+    void patch({ selected: { captionId: "draft", text, hashtags } });
+    flash("Your draft is now the caption");
   }
 
   async function removeVideo() {
@@ -186,7 +204,7 @@ export function FinalDetail({ id }: { id: string }) {
       </div>
 
       {/* Live steps */}
-      <ol className="grid grid-cols-3 gap-2 text-sm">
+      <ol className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
         {STEPS.map((s) => {
           const st = final.steps[s.name];
           const style =
@@ -194,9 +212,11 @@ export function FinalDetail({ id }: { id: string }) {
               ? "border-accent bg-accent-soft"
               : st.status === "failed"
                 ? "border-bad border-dashed"
-                : st.status === "done"
-                  ? "border-line bg-surface"
-                  : "border-line opacity-50";
+                : st.status === "needs_you"
+                  ? "border-accent"
+                  : st.status === "done"
+                    ? "border-line bg-surface"
+                    : "border-line opacity-50";
           return (
             <li key={s.name} className={`flex flex-col gap-0.5 rounded-lg border p-3 ${style}`}>
               <span className="font-medium">{s.label}</span>
@@ -204,6 +224,8 @@ export function FinalDetail({ id }: { id: string }) {
                 {st.status === "running" && `● ${s.running}…`}
                 {st.status === "done" && `✓ Done${st.seconds !== null ? ` · ${st.seconds}s` : ""}`}
                 {st.status === "waiting" && "Waiting"}
+                {st.status === "needs_you" && <span className="font-medium text-accent">Needs you</span>}
+                {st.status === "skipped" && "Skipped"}
                 {st.status === "failed" && <span className="text-bad">Failed</span>}
               </span>
             </li>
@@ -237,8 +259,13 @@ export function FinalDetail({ id }: { id: string }) {
         </div>
 
         <div className="flex min-w-0 flex-col gap-6">
+          {/* Description check: pauses here until you carry on */}
+          {final.description && final.steps.review.status === "needs_you" && (
+            <ReviewForm description={final.description} busy={busy} onSubmit={(d) => void run("captions", d)} />
+          )}
+
           {/* Description */}
-          {final.description && (
+          {final.description && final.steps.review.status !== "needs_you" && (
             <section className="flex flex-col gap-2 rounded-xl border border-line bg-surface p-4">
               <div className="flex items-center justify-between gap-3">
                 <h2 className="font-medium">Description</h2>
@@ -390,6 +417,16 @@ export function FinalDetail({ id }: { id: string }) {
               </div>
             </section>
           )}
+
+          <DraftPanel
+            key={final.captions?.options[0]?.id}
+            final={final}
+            placement={placement}
+            spacer={spacer}
+            save={saveDraft}
+            onFinal={apply}
+            onUse={useDraft}
+          />
 
           {/* Editor, preview and copy */}
           {captions && final.selected && (

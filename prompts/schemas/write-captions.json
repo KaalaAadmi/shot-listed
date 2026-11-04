@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "write-captions",
+  "type": "object",
+  "properties": {
+    "options": {
+      "type": "array",
+      "description": "Exactly 3 caption options, each with a clearly different tone",
+      "items": {
+        "type": "object",
+        "properties": {
+          "tone_label": {
+            "type": "string",
+            "description": "Short tone label, e.g. 'Dry & punchy'"
+          },
+          "hook": {
+            "type": "string",
+            "description": "Line 1: the hook. One line, no line breaks"
+          },
+          "context": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Lines 2-3: one or two natural sentences, one per item, carrying the keywords"
+          },
+          "cta": {
+            "type": "string",
+            "description": "Line 4: a question that invites a reply or a tag"
+          },
+          "hashtags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Line 5: 3 to 5 mid-size hashtags (100k-2M posts), without the # sign"
+          },
+          "keywords": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The keyword phrases this option carries, exactly as they appear in it"
+          }
+        },
+        "required": [
+          "tone_label",
+          "hook",
+          "context",
+          "cta",
+          "hashtags",
+          "keywords"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "recommended_option": {
+      "type": "integer",
+      "description": "1, 2 or 3: the option you would post"
+    },
+    "recommended_reason": {
+      "type": "string",
+      "description": "One or two sentences on why"
+    },
+    "keywords_woven": {
+      "type": "array",
+      "description": "The 4 to 6 keyword phrases, and where each sits",
+      "items": {
+        "type": "object",
+        "properties": {
+          "phrase": {
+            "type": "string",
+            "description": "The keyword phrase"
+          },
+          "where": {
+            "type": "string",
+            "description": "Which option and line carry it, e.g. 'Option 2, line 2'"
+          }
+        },
+        "required": [
+          "phrase",
+          "where"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "content_feedback": {
+      "type": "object",
+      "properties": {
+        "rating": {
+          "type": "string",
+          "description": "Honest rating with a short reason, e.g. '6/10: the punchline lands too late'"
+        },
+        "most_similar_reel": {
+          "type": "string",
+          "description": "The past reel from the content history it is most like"
+        },
+        "lesson": {
+          "type": "string",
+          "description": "What to learn from that reel"
+        },
+        "improvement": {
+          "type": "string",
+          "description": "One specific thing to improve"
+        }
+      },
+      "required": [
+        "rating",
+        "most_similar_reel",
+        "lesson",
+        "improvement"
+      ],
+      "additionalProperties": false
+    },
+    "trial_recommended": {
+      "type": "boolean",
+      "description": "Whether to post this with Instagram's Trial feature"
+    },
+    "trial_reason": {
+      "type": "string",
+      "description": "One line"
+    }
+  },
+  "required": [
+    "options",
+    "recommended_option",
+    "recommended_reason",
+    "keywords_woven",
+    "content_feedback",
+    "trial_recommended",
+    "trial_reason"
+  ],
+  "additionalProperties": false
+}

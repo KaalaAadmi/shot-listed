@@ -33,7 +33,11 @@ export function geminiModel(apiKey: string, model: string): CaptionModel {
 
     async generateJson({ system, parts, schema, temperature }) {
       const contents: Part[] = parts.map((p) =>
-        "video" in p ? createPartFromUri(p.video.uri, p.video.mimeType) : { text: p.text },
+        "video" in p
+          ? createPartFromUri(p.video.uri, p.video.mimeType)
+          : "image" in p
+            ? { inlineData: { data: p.image.base64, mimeType: p.image.mimeType } }
+            : { text: p.text },
       );
       const res = await ai.models.generateContent({
         model,

@@ -3,7 +3,7 @@
 
 export type UploadedVideo = { name: string; uri: string; mimeType: string };
 
-export type ModelPart = { text: string } | { video: UploadedVideo };
+export type ModelPart = { text: string } | { video: UploadedVideo } | { image: { mimeType: string; base64: string } };
 
 /** Anything that can return JSON matching a schema. Enough for writing captions. */
 export interface JsonModel {

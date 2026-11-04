@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "describe-reel",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Short working title for the reel, under 8 words"
+    },
+    "summary": {
+      "type": "string",
+      "description": "Two or three sentences: what the reel shows and its point"
+    },
+    "hook": {
+      "type": "string",
+      "description": "Exactly what happens and is said or shown in the first 3 seconds"
+    },
+    "beats": {
+      "type": "array",
+      "description": "Each distinct shot or moment, in order",
+      "items": {
+        "type": "object",
+        "properties": {
+          "start": {
+            "type": "number",
+            "description": "Seconds from the start"
+          },
+          "end": {
+            "type": "number"
+          },
+          "visual": {
+            "type": "string",
+            "description": "What is on screen"
+          },
+          "onScreenText": {
+            "type": "string",
+            "description": "Text overlay shown during this beat, verbatim, or empty"
+          },
+          "audio": {
+            "type": "string",
+            "description": "Voiceover, dialogue or notable sound in this beat, or empty"
+          }
+        },
+        "required": [
+          "start",
+          "end",
+          "visual",
+          "onScreenText",
+          "audio"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "spokenWords": {
+      "type": "string",
+      "description": "Full transcript of any speech or voiceover, or empty"
+    },
+    "onScreenText": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Every text overlay, verbatim, in order"
+    },
+    "audio": {
+      "type": "string",
+      "description": "Music or sound: genre, energy, whether it is a trending-style track or original audio"
+    },
+    "setting": {
+      "type": "string",
+      "description": "Where it was filmed, as specifically as can be seen"
+    },
+    "mood": {
+      "type": "string",
+      "description": "The feeling the reel is going for"
+    },
+    "callToAction": {
+      "type": "string",
+      "description": "Any call to action in the video itself, or empty"
+    },
+    "durationSeconds": {
+      "type": "number"
+    },
+    "plainDescription": {
+      "type": "string",
+      "description": "One paragraph describing the reel for someone who cannot see it, specific enough to write a caption from"
+    }
+  },
+  "required": [
+    "title",
+    "summary",
+    "hook",
+    "beats",
+    "spokenWords",
+    "onScreenText",
+    "audio",
+    "setting",
+    "mood",
+    "callToAction",
+    "durationSeconds",
+    "plainDescription"
+  ],
+  "additionalProperties": false
+}
